@@ -1,0 +1,461 @@
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:provider/provider.dart';
+import '../../../core/localization/language_provider.dart';
+import '../../../core/theme/app_theme.dart';
+import '../providers/onboarding_provider.dart';
+
+/// First-launch Privacy Policy, Permission Disclosures, and Terms of Use screen.
+/// Defaults to English with a built-in English/Tagalog (EN/TL) language switch.
+class PolicyConsentScreen extends StatefulWidget {
+  const PolicyConsentScreen({super.key});
+
+  @override
+  State<PolicyConsentScreen> createState() => _PolicyConsentScreenState();
+}
+
+class _PolicyConsentScreenState extends State<PolicyConsentScreen> {
+  bool _agreed = false;
+
+  void _showFullPolicyDialog(BuildContext context, {required bool isTl}) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Row(
+          children: [
+            const Icon(Icons.policy_rounded, color: Color(0xFF059669)),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                isTl ? 'Patakaran sa Privacy' : 'Privacy Policy & Offline Terms',
+                style: const TextStyle(fontSize: 16),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ],
+        ),
+        content: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                '1. Zero-Cloud & 100% Offline Guarantee',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                isTl
+                    ? 'Ang SariMe ay walang internet connection permission sa system manifest (android.permission.INTERNET ay tinanggal). Hindi kailanman lumalabas sa iyong telepono ang mga detalye ng iyong tindahan, benta, customer, o utang.'
+                    : 'SariMe has no internet connection permission in the system manifest (android.permission.INTERNET is removed). Your store details, sales, customers, and utang records never leave your phone.',
+                style: const TextStyle(fontSize: 12),
+              ),
+              const SizedBox(height: 12),
+              const Text(
+                '2. Camera Access (mobile_scanner)',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                isTl
+                    ? 'Ginagamit lamang ang camera sa live viewfinder para basahin ang mga barcode ng paninda. Hindi ito nagse-save ng litrato o video sa iyong gallery o memory.'
+                    : 'The camera is used strictly in the live viewfinder to scan product barcodes. It does not save photos or videos to your gallery or memory.',
+                style: const TextStyle(fontSize: 12),
+              ),
+              const SizedBox(height: 12),
+              const Text(
+                '3. Microphone Access (speech_to_text)',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                isTl
+                    ? 'Ginagamit lamang ang microphone para sa on-device speech recognition para sa mga voice commands ng restock. Ang audio ay hindi nire-record o inililipat.'
+                    : 'The microphone is used only for on-device speech recognition for voice restock commands. Audio is never recorded or transmitted.',
+                style: const TextStyle(fontSize: 12),
+              ),
+              const SizedBox(height: 12),
+              const Text(
+                '4. File Storage & Backup (share_plus, file_picker)',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                isTl
+                    ? 'Ikaw ang 100% na may-ari ng iyong data. Ang pag-export at pag-import ng backup ay ginagawa lamang kapag ikaw mismo ang pumili nito sa mga setting.'
+                    : 'You own 100% of your data. Exporting and importing backups only happen when you explicitly choose to do so in Settings.',
+                style: const TextStyle(fontSize: 12),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          ElevatedButton(
+            onPressed: () => Navigator.pop(ctx),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppTheme.primaryGreen,
+              foregroundColor: Colors.white,
+            ),
+            child: Text(isTl ? 'Naiintindihan Ko' : 'I Understand'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final onboardingProv = context.read<OnboardingProvider>();
+    final langProv = context.watch<LanguageProvider?>();
+    final isTl = langProv?.isTagalog ?? false;
+
+    return Scaffold(
+      backgroundColor: theme.scaffoldBackgroundColor,
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // Language Toggle Row (EN / TL)
+              if (langProv != null)
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(16),
+                    onTap: () {
+                      HapticFeedback.selectionClick();
+                      langProv.toggleLanguage();
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: AppTheme.primaryGreen.withOpacity(0.14),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: AppTheme.primaryGreen.withOpacity(0.35)),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.translate_rounded, size: 14, color: AppTheme.primaryGreen),
+                          const SizedBox(width: 6),
+                          Text(
+                            isTl ? 'Tagalog (TL)' : 'English (EN)',
+                            style: const TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w800,
+                              color: AppTheme.primaryGreen,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+
+              const SizedBox(height: 8),
+
+              // App Icon & Brand Emblem
+              Center(
+                child: Container(
+                  width: 90,
+                  height: 90,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(22),
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFF059669), Color(0xFF0F172A)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppTheme.primaryGreen.withOpacity(0.35),
+                        blurRadius: 20,
+                        offset: const Offset(0, 8),
+                      ),
+                    ],
+                  ),
+                  clipBehavior: Clip.antiAlias,
+                  child: const Center(
+                    child: Icon(
+                      Icons.storefront_rounded,
+                      size: 46,
+                      color: AppTheme.accentAmber,
+                    ),
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 16),
+
+              // Title
+              const Center(
+                child: Text(
+                  'SariMe',
+                  style: TextStyle(
+                    fontSize: 28,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: -0.5,
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 4),
+
+              Center(
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: AppTheme.primaryGreen.withOpacity(0.12),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: const Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.offline_bolt_rounded, size: 14, color: AppTheme.primaryGreen),
+                      SizedBox(width: 4),
+                      Flexible(
+                        child: Text(
+                          '100% Offline POS & Utang Ledger',
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                            color: AppTheme.primaryGreen,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 14),
+
+              Center(
+                child: Text(
+                  isTl
+                      ? 'Bago simulan ang pagpapatakbo ng tindahan, mangyaring basahin at kumpirmahin ang patakaran sa privacy at mga gagamiting pahintulot ng iyong telepono:'
+                      : 'Before starting your store, please review and confirm our offline privacy policy and device permission disclosures:',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: theme.colorScheme.onSurface.withOpacity(0.7),
+                    height: 1.4,
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 20),
+
+              // 1. Zero Internet Guarantee Card
+              _buildTrustCard(
+                context,
+                icon: Icons.shield_rounded,
+                iconColor: AppTheme.primaryGreen,
+                title: isTl
+                    ? '100% Offline & Pribado (Zero Internet)'
+                    : '100% Offline & Private (Zero Internet)',
+                subtitle: isTl
+                    ? 'Walang internet permission ang app na ito. Ang iyong benta, kita, at listahan ng utang ay LIGTAS na nananatili sa loob lamang ng iyong telepono. Walang cloud o server.'
+                    : 'This app has zero internet permissions. Your sales, profit, and utang records stay safely on your phone with no cloud or external servers.',
+              ),
+
+              const SizedBox(height: 10),
+
+              // 2. Camera Card
+              _buildTrustCard(
+                context,
+                icon: Icons.qr_code_scanner_rounded,
+                iconColor: AppTheme.accentAmber,
+                title: isTl
+                    ? 'Kamera (Camera Access)'
+                    : 'Camera Access (Barcode Scanner)',
+                subtitle: isTl
+                    ? 'Ginagamit lamang para i-scan ang mga barcode ng paninda (gamit ang mobile_scanner). Hinding-hindi kumukuha, nagse-save, o nag-a-upload ng litrato o video.'
+                    : 'Used strictly for scanning product barcodes live. It never captures, saves, or uploads photos or videos.',
+              ),
+
+              const SizedBox(height: 10),
+
+              // 3. Microphone Card
+              _buildTrustCard(
+                context,
+                icon: Icons.mic_rounded,
+                iconColor: const Color(0xFF0284C7),
+                title: isTl
+                    ? 'Mikropono (Microphone Access)'
+                    : 'Microphone Access (Voice Restock)',
+                subtitle: isTl
+                    ? 'Ginagamit lamang para sa mabilis na boses o voice restock (hal. "Dagdag 10 Coke"). Pinoproseso ang boses nang lokal sa phone at hindi inirerekord o ipinapadala saanman.'
+                    : 'Used only for on-device voice commands (e.g., "Add 10 Coke"). Voice audio is processed locally on your phone and never recorded or transmitted.',
+              ),
+
+              const SizedBox(height: 10),
+
+              // 4. Storage Card
+              _buildTrustCard(
+                context,
+                icon: Icons.save_alt_rounded,
+                iconColor: const Color(0xFF7C3AED),
+                title: isTl
+                    ? 'Lokal na Storage at Backup'
+                    : 'Local Storage & Backup',
+                subtitle: isTl
+                    ? 'Ikaw ang buong may-ari ng iyong tindahan. Maaari kang mag-export ng backup file sa iyong sariling SD card o telepono anumang oras.'
+                    : 'You own 100% of your store data. You can export or restore a backup file on your phone anytime.',
+              ),
+
+              const SizedBox(height: 16),
+
+              // Link to read full policy
+              Center(
+                child: TextButton.icon(
+                  onPressed: () => _showFullPolicyDialog(context, isTl: isTl),
+                  icon: const Icon(Icons.info_outline_rounded, size: 16),
+                  label: Text(
+                    isTl
+                        ? 'Basahin ang Buong Patakaran sa Privacy'
+                        : 'Read Full Privacy Policy',
+                    style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 8),
+
+              // Agreement Checkbox
+              Container(
+                decoration: BoxDecoration(
+                  color: isDark ? const Color(0xFF1A2438) : const Color(0xFFF1F5F9),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: _agreed ? AppTheme.primaryGreen : Colors.transparent,
+                    width: 1.5,
+                  ),
+                ),
+                child: Material(
+                  color: Colors.transparent,
+                  child: CheckboxListTile(
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                    value: _agreed,
+                    activeColor: AppTheme.primaryGreen,
+                    title: Text(
+                      isTl
+                          ? 'Nauunawaan at tinatanggap ko ang Patakaran sa Privacy at Offline Terms ng SariMe.'
+                          : 'I understand and accept the SariMe Privacy Policy and Offline Terms.',
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    onChanged: (val) {
+                      HapticFeedback.selectionClick();
+                      setState(() => _agreed = val ?? false);
+                    },
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 16),
+
+              // Accept Button
+              ElevatedButton.icon(
+                onPressed: !_agreed
+                    ? null
+                    : () async {
+                        HapticFeedback.mediumImpact();
+                        await onboardingProv.acceptPolicy();
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                isTl
+                                    ? 'Maligayang pagdating sa SariMe! Handa na ang iyong tindahan.'
+                                    : 'Welcome to SariMe! Your store is ready.',
+                              ),
+                              backgroundColor: AppTheme.primaryGreen,
+                            ),
+                          );
+                        }
+                      },
+                icon: const Icon(Icons.check_circle_rounded),
+                label: Text(
+                  isTl ? 'Sumasang-ayon Ako at Magsimula' : 'I Agree & Start Store',
+                  style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppTheme.primaryGreen,
+                  foregroundColor: Colors.white,
+                  disabledBackgroundColor: Colors.grey.withOpacity(0.3),
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTrustCard(
+    BuildContext context, {
+    required IconData icon,
+    required Color iconColor,
+    required String title,
+    required String subtitle,
+  }) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF151E2E) : Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: isDark ? const Color(0xFF263345) : const Color(0xFFE2E8F0),
+        ),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: iconColor.withOpacity(0.12),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(icon, color: iconColor, size: 20),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  subtitle,
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: theme.colorScheme.onSurface.withOpacity(0.65),
+                    height: 1.35,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
