@@ -7,6 +7,7 @@ import '../../../core/utils/currency_formatter.dart';
 import '../../../data/models/product.dart';
 import '../../../shared/widgets/price_text.dart';
 import '../../../shared/widgets/stock_badge.dart';
+import '../../../shared/widgets/product_image_thumbnail.dart';
 import '../providers/product_provider.dart';
 import 'add_edit_product_sheet.dart';
 
@@ -347,14 +348,59 @@ class ProductDetailSheet extends StatelessWidget {
             ),
             const SizedBox(height: 12),
 
-            // Product Name
-            Text(
-              product.name,
-              style: const TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.w900,
-                letterSpacing: -0.3,
-              ),
+            // Product Photo & Name Header
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                ProductImageThumbnail(
+                  imagePath: product.imagePath,
+                  width: 58,
+                  height: 58,
+                  borderRadius: 12,
+                  fallback: Container(
+                    width: 58,
+                    height: 58,
+                    decoration: BoxDecoration(
+                      color: catColor.withOpacity(0.12),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Icon(catIcon, color: catColor, size: 28),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        product.name,
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: -0.3,
+                        ),
+                      ),
+                      if (product.imagePath != null) ...[
+                        const SizedBox(height: 4),
+                        const Row(
+                          children: [
+                            Icon(Icons.photo_camera_rounded, size: 12, color: AppTheme.primaryGreen),
+                            SizedBox(width: 4),
+                            Text(
+                              'Offline Photo Attached',
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w600,
+                                color: AppTheme.primaryGreen,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              ],
             ),
             const SizedBox(height: 14),
 

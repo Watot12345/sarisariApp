@@ -9,6 +9,7 @@ import '../../../shared/widgets/price_text.dart';
 import '../../../shared/widgets/stock_badge.dart';
 import '../../../shared/widgets/empty_state.dart';
 import '../../../shared/widgets/barcode_scanner_sheet.dart';
+import '../../../shared/widgets/product_image_thumbnail.dart';
 import '../../products/providers/product_provider.dart';
 import '../../products/widgets/add_edit_product_sheet.dart';
 import '../../utang/providers/utang_provider.dart';
@@ -330,18 +331,34 @@ class _ProductGridTileState extends State<_ProductGridTile> {
                   ],
                 ),
                 const SizedBox(height: 8),
-                Text(
-                  product.name,
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w700,
-                    height: 1.25,
-                    color: isOut
-                        ? theme.colorScheme.onSurface.withOpacity(0.5)
-                        : theme.colorScheme.onSurface,
-                  ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    if (product.imagePath != null) ...[
+                      ProductImageThumbnail(
+                        imagePath: product.imagePath,
+                        width: 28,
+                        height: 28,
+                        borderRadius: 6,
+                      ),
+                      const SizedBox(width: 6),
+                    ],
+                    Expanded(
+                      child: Text(
+                        product.name,
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                          height: 1.25,
+                          color: isOut
+                              ? theme.colorScheme.onSurface.withOpacity(0.5)
+                              : theme.colorScheme.onSurface,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
                 ),
                 const Spacer(),
                 Row(
@@ -587,6 +604,15 @@ class _CartBottomSheetContent extends StatelessWidget {
                         },
                         child: Row(
                           children: [
+                            if (item.product.imagePath != null) ...[
+                              ProductImageThumbnail(
+                                imagePath: item.product.imagePath,
+                                width: 36,
+                                height: 36,
+                                borderRadius: 6,
+                              ),
+                              const SizedBox(width: 10),
+                            ],
                             Expanded(
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,

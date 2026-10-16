@@ -9,6 +9,7 @@ import '../../../shared/widgets/price_text.dart';
 import '../../../shared/widgets/stock_badge.dart';
 import '../../../shared/widgets/empty_state.dart';
 import '../../../shared/widgets/barcode_scanner_sheet.dart';
+import '../../../shared/widgets/product_image_thumbnail.dart';
 import '../providers/product_provider.dart';
 import '../widgets/add_edit_product_sheet.dart';
 import '../widgets/product_detail_sheet.dart';
@@ -278,7 +279,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
                       separatorBuilder: (_, __) => const SizedBox(height: AppConstants.space8),
                       itemBuilder: (context, index) {
                         final item = products[index];
-                        final (catColor, _) = AppTheme.getCategoryStyle(item.categoryName);
+                        final (catColor, catIcon) = AppTheme.getCategoryStyle(item.categoryName);
                         final isTingiMother = item.pieceProductId != null && (item.piecesPerPack ?? 0) > 0;
 
                         return Card(
@@ -302,6 +303,24 @@ class _ProductsScreenState extends State<ProductsScreen> {
                                     decoration: BoxDecoration(
                                       color: catColor,
                                       borderRadius: BorderRadius.circular(2),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+
+                                  // Product Thumbnail (Image with Category Icon fallback)
+                                  ProductImageThumbnail(
+                                    imagePath: item.imagePath,
+                                    width: 44,
+                                    height: 44,
+                                    borderRadius: 8,
+                                    fallback: Container(
+                                      width: 44,
+                                      height: 44,
+                                      decoration: BoxDecoration(
+                                        color: catColor.withOpacity(0.12),
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                      child: Icon(catIcon, color: catColor, size: 22),
                                     ),
                                   ),
                                   const SizedBox(width: 10),

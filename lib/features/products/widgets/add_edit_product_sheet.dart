@@ -278,6 +278,7 @@ class _AddEditProductSheetState extends State<AddEditProductSheet> {
           pieceProductId: _isTingiPack ? _selectedPieceProductId : null,
           piecesPerPack: piecesPerPack,
           imagePath: _imagePath,
+          clearImagePath: _imagePath == null,
         );
         await prov.updateProduct(updated, categoryName: categoryToUse);
       } else {
