@@ -166,7 +166,9 @@ class _ReportsScreenState extends State<ReportsScreen> {
                                   overflow: TextOverflow.ellipsis,
                                 ),
                                 Text(
-                                  '${item['qty']} units sold',
+                                  lang.isTagalog
+                                      ? '${item['qty']} pirasong naibenta'
+                                      : '${item['qty']} units sold',
                                   style: TextStyle(
                                     fontSize: 11,
                                     color: theme.colorScheme.onSurface.withOpacity(0.6),
@@ -202,16 +204,16 @@ class _ReportsScreenState extends State<ReportsScreen> {
                       color: AppTheme.dangerRed.withOpacity(0.12),
                       shape: BoxShape.circle,
                     ),
-                    child: Icon(Icons.receipt_long_rounded, color: AppTheme.dangerRed),
+                    child: const Icon(Icons.receipt_long_rounded, color: AppTheme.dangerRed),
                   ),
                   const SizedBox(width: AppConstants.space16),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
-                          AppStrings.unpaidCredit,
-                          style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                        Text(
+                          lang.isTagalog ? 'Kabuuang Hindi Pa Nababayarang Utang' : AppStrings.unpaidCredit,
+                          style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
                         ),
                         const SizedBox(height: 2),
                         PriceText(

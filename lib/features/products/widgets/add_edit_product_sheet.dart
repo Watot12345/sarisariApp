@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../../core/constants.dart';
+import '../../../core/localization/language_provider.dart';
 import '../../../core/services/product_image_service.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/utils/currency_formatter.dart';
@@ -128,6 +129,7 @@ class _AddEditProductSheetState extends State<AddEditProductSheet> {
 
   void _showPhotoOptions() {
     final theme = Theme.of(context);
+    final isTl = context.read<LanguageProvider?>()?.isTagalog ?? false;
     showModalBottomSheet(
       context: context,
       shape: const RoundedRectangleBorder(
@@ -148,13 +150,15 @@ class _AddEditProductSheetState extends State<AddEditProductSheet> {
                 ),
               ),
               const SizedBox(height: 16),
-              const Text(
-                'Litrato ng Produkto (Product Photo)',
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+              Text(
+                isTl ? 'Litrato ng Produkto' : 'Product Photo',
+                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
               ),
               const SizedBox(height: 4),
               Text(
-                'Awtomatikong naka-compress (~30 KB) para magaan sa phone',
+                isTl
+                    ? 'Awtomatikong naka-compress (~30 KB) para magaan sa phone'
+                    : 'Auto-compressed (~30 KB) to save phone storage',
                 style: TextStyle(fontSize: 12, color: theme.colorScheme.onSurface.withOpacity(0.6)),
               ),
               const SizedBox(height: 16),
@@ -163,8 +167,12 @@ class _AddEditProductSheetState extends State<AddEditProductSheet> {
                   backgroundColor: Color(0xFFD1FAE5),
                   child: Icon(Icons.camera_alt_rounded, color: AppTheme.primaryGreen),
                 ),
-                title: const Text('Kunan gamit ang Camera'),
-                subtitle: const Text('Kuhanan ng litrato ang paninda sa estante'),
+                title: Text(isTl ? 'Kunan gamit ang Camera' : 'Take with Camera'),
+                subtitle: Text(
+                  isTl
+                      ? 'Kuhanan ng litrato ang paninda sa estante'
+                      : 'Snap a picture of the product on shelf',
+                ),
                 onTap: () {
                   Navigator.pop(ctx);
                   _pickPhoto(ImageSource.camera);
@@ -175,8 +183,12 @@ class _AddEditProductSheetState extends State<AddEditProductSheet> {
                   backgroundColor: Color(0xFFDBEAFE),
                   child: Icon(Icons.photo_library_rounded, color: Color(0xFF2563EB)),
                 ),
-                title: const Text('Pumili sa Gallery / Photos'),
-                subtitle: const Text('Pumili mula sa iyong nai-download o litrato'),
+                title: Text(isTl ? 'Pumili sa Gallery / Photos' : 'Choose from Gallery / Photos'),
+                subtitle: Text(
+                  isTl
+                      ? 'Pumili mula sa iyong nai-download o litrato'
+                      : 'Select from your device photos or downloads',
+                ),
                 onTap: () {
                   Navigator.pop(ctx);
                   _pickPhoto(ImageSource.gallery);
@@ -188,7 +200,10 @@ class _AddEditProductSheetState extends State<AddEditProductSheet> {
                     backgroundColor: Color(0xFFFEE2E2),
                     child: Icon(Icons.delete_outline_rounded, color: AppTheme.dangerRed),
                   ),
-                  title: const Text('Tanggalin ang Litrato', style: TextStyle(color: AppTheme.dangerRed)),
+                  title: Text(
+                    isTl ? 'Tanggalin ang Litrato' : 'Remove Photo',
+                    style: const TextStyle(color: AppTheme.dangerRed),
+                  ),
                   onTap: () {
                     Navigator.pop(ctx);
                     _removePhoto();
@@ -220,18 +235,22 @@ class _AddEditProductSheetState extends State<AddEditProductSheet> {
       return;
     }
     final prov = context.read<ProductProvider>();
+    final isTl = context.read<LanguageProvider?>()?.isTagalog ?? false;
     final isUnique = await prov.isBarcodeUnique(
       barcode.trim(),
       excludeProductId: widget.product?.id,
     );
     if (mounted) {
       setState(() {
-        _barcodeError = isUnique ? null : 'Ginagamit na ang barcode na ito';
+        _barcodeError = isUnique
+            ? null
+            : (isTl ? 'Ginagamit na ang barcode na ito' : 'This barcode is already in use');
       });
     }
   }
 
   Future<void> _save() async {
+    final isTl = context.read<LanguageProvider?>()?.isTagalog ?? false;
     if (!_formKey.currentState!.validate() || _barcodeError != null) {
       return;
     }
@@ -239,7 +258,11 @@ class _AddEditProductSheetState extends State<AddEditProductSheet> {
     final priceCents = CurrencyFormatter.parsePesosToCentavos(_priceCtrl.text);
     if (priceCents <= 0) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Kailangang mas mataas sa zero ang presyo.')),
+        SnackBar(
+          content: Text(
+            isTl ? 'Kailangang mas mataas sa zero ang presyo.' : 'Price must be greater than zero.',
+          ),
+        ),
       );
       return;
     }
@@ -305,8 +328,12 @@ class _AddEditProductSheetState extends State<AddEditProductSheet> {
           SnackBar(
             content: Text(
               isEditing
-                  ? 'Matagumpay na na-update si ${_nameCtrl.text.trim()}!'
-                  : 'Nai-dagdag na si ${_nameCtrl.text.trim()} sa imbentaryo!',
+                  ? (isTl
+                      ? 'Matagumpay na na-update si ${_nameCtrl.text.trim()}!'
+                      : 'Successfully updated ${_nameCtrl.text.trim()}!')
+                  : (isTl
+                      ? 'Nai-dagdag na si ${_nameCtrl.text.trim()} sa imbentaryo!'
+                      : 'Added ${_nameCtrl.text.trim()} to inventory!'),
             ),
             backgroundColor: AppTheme.primaryGreen,
           ),
@@ -315,7 +342,9 @@ class _AddEditProductSheetState extends State<AddEditProductSheet> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error sa pag-save: $e')),
+          SnackBar(
+            content: Text(isTl ? 'Error sa pag-save: $e' : 'Error saving: $e'),
+          ),
         );
       }
     } finally {
@@ -328,6 +357,8 @@ class _AddEditProductSheetState extends State<AddEditProductSheet> {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final productProv = context.watch<ProductProvider>();
+    final langProv = context.watch<LanguageProvider?>();
+    final isTl = langProv?.isTagalog ?? true;
 
     final availableCategories = {
       'Noodles',
@@ -441,7 +472,9 @@ class _AddEditProductSheetState extends State<AddEditProductSheet> {
                                       const Icon(Icons.check_circle_rounded, size: 14, color: AppTheme.primaryGreen),
                                       const SizedBox(width: 4),
                                       Text(
-                                        'May Litrato (${_imageFileSize ?? "Compressed"})',
+                                        isTl
+                                            ? 'May Litrato (${_imageFileSize ?? "Compressed"})'
+                                            : 'With Photo (${_imageFileSize ?? "Compressed"})',
                                         style: const TextStyle(
                                           fontSize: 12,
                                           fontWeight: FontWeight.bold,
@@ -451,21 +484,23 @@ class _AddEditProductSheetState extends State<AddEditProductSheet> {
                                     ],
                                   ),
                                   const SizedBox(height: 2),
-                                  const Text(
-                                    'Ligtas na naka-store sa phone mo lamang.',
-                                    style: TextStyle(fontSize: 11, color: Colors.grey),
+                                  Text(
+                                    isTl
+                                        ? 'Ligtas na naka-store sa phone mo lamang.'
+                                        : 'Safely stored on your device only.',
+                                    style: const TextStyle(fontSize: 11, color: Colors.grey),
                                   ),
                                 ],
                               ),
                             ),
                             IconButton(
                               icon: const Icon(Icons.edit_outlined, size: 20),
-                              tooltip: 'Palitan ang litrato',
+                              tooltip: isTl ? 'Palitan ang litrato' : 'Change photo',
                               onPressed: _showPhotoOptions,
                             ),
                             IconButton(
                               icon: const Icon(Icons.close_rounded, size: 20, color: AppTheme.dangerRed),
-                              tooltip: 'Tanggalin',
+                              tooltip: isTl ? 'Tanggalin' : 'Remove',
                               onPressed: _removePhoto,
                             ),
                           ],
@@ -495,16 +530,18 @@ class _AddEditProductSheetState extends State<AddEditProductSheet> {
                                   child: Column(
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
-                                      const Text(
-                                        'Maglagay ng Litrato (Opsyonal)',
-                                        style: TextStyle(
+                                      Text(
+                                        isTl ? 'Maglagay ng Litrato (Opsyonal)' : 'Add Product Photo (Optional)',
+                                        style: const TextStyle(
                                           fontWeight: FontWeight.bold,
                                           fontSize: 13,
                                         ),
                                       ),
                                       const SizedBox(height: 2),
                                       Text(
-                                        'Kusang kinocompress (~30 KB) para tipid sa memory',
+                                        isTl
+                                            ? 'Kusang kinocompress (~30 KB) para tipid sa memory'
+                                            : 'Auto-compressed (~30 KB) to save memory',
                                         style: TextStyle(
                                           fontSize: 11,
                                           color: theme.colorScheme.onSurface.withOpacity(0.6),
@@ -523,13 +560,13 @@ class _AddEditProductSheetState extends State<AddEditProductSheet> {
                 // Product Name
                 TextFormField(
                   controller: _nameCtrl,
-                  decoration: const InputDecoration(
-                    labelText: 'Pangalan ng Produkto *',
-                    hintText: 'hal. Lucky Me Pancit Canton',
-                    prefixIcon: Icon(Icons.shopping_bag_outlined),
+                  decoration: InputDecoration(
+                    labelText: isTl ? 'Pangalan ng Produkto *' : 'Product Name *',
+                    hintText: isTl ? 'hal. Lucky Me Pancit Canton' : 'e.g., Lucky Me Pancit Canton',
+                    prefixIcon: const Icon(Icons.shopping_bag_outlined),
                   ),
                   validator: (v) =>
-                      v == null || v.trim().isEmpty ? 'Kailangan ang pangalan.' : null,
+                      v == null || v.trim().isEmpty ? (isTl ? 'Kailangan ang pangalan.' : 'Name is required.') : null,
                 ),
                 const SizedBox(height: 14),
 
@@ -539,17 +576,17 @@ class _AddEditProductSheetState extends State<AddEditProductSheet> {
                   keyboardType: TextInputType.number,
                   onChanged: _validateBarcode,
                   decoration: InputDecoration(
-                    labelText: 'Barcode (Opsyonal)',
-                    hintText: 'I-type o i-scan ang barcode',
+                    labelText: isTl ? 'Barcode (Opsyonal)' : 'Barcode (Optional)',
+                    hintText: isTl ? 'I-type o i-scan ang barcode' : 'Type or scan barcode',
                     prefixIcon: const Icon(Icons.qr_code_scanner_rounded),
                     suffixIcon: IconButton(
                       key: const Key('scan_barcode_in_form_btn'),
-                      tooltip: 'Scan Barcode',
+                      tooltip: isTl ? 'Scan Barcode' : 'Scan Barcode',
                       icon: const Icon(Icons.center_focus_strong_rounded),
                       onPressed: () async {
                         final scanned = await BarcodeScannerSheet.show(
                           context,
-                          title: 'Scan Product Barcode',
+                          title: isTl ? 'I-scan ang Barcode' : 'Scan Product Barcode',
                         );
                         if (scanned != null && scanned.isNotEmpty && mounted) {
                           _barcodeCtrl.text = scanned;
@@ -566,9 +603,9 @@ class _AddEditProductSheetState extends State<AddEditProductSheet> {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      'Kategorya ng Produkto *',
-                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                    Text(
+                      isTl ? 'Kategorya ng Produkto *' : 'Product Category *',
+                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
                     ),
                     const SizedBox(height: 6),
 
@@ -603,7 +640,7 @@ class _AddEditProductSheetState extends State<AddEditProductSheet> {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
-                                      'BERIPIKADONG KATEGORYA',
+                                      isTl ? 'BERIPIKADONG KATEGORYA' : 'VERIFIED CATEGORY',
                                       style: TextStyle(
                                         fontSize: 10,
                                         fontWeight: FontWeight.w900,
@@ -655,7 +692,9 @@ class _AddEditProductSheetState extends State<AddEditProductSheet> {
                         }),
                         ActionChip(
                           avatar: Icon(_isCreatingNewCategory ? Icons.check_circle : Icons.add_circle_outline, size: 16),
-                          label: Text(_isCreatingNewCategory ? 'Bagong Kategorya' : '+ Bago'),
+                          label: Text(_isCreatingNewCategory
+                              ? (isTl ? 'Bagong Kategorya' : 'New Category')
+                              : (isTl ? '+ Bago' : '+ New')),
                           backgroundColor: _isCreatingNewCategory ? AppTheme.accentPurple.withOpacity(0.15) : null,
                           onPressed: () {
                             HapticFeedback.lightImpact();
@@ -672,14 +711,16 @@ class _AddEditProductSheetState extends State<AddEditProductSheet> {
                       TextFormField(
                         controller: _newCategoryCtrl,
                         onChanged: (_) => setState(() {}),
-                        decoration: const InputDecoration(
-                          labelText: 'Pangalan ng Bagong Kategorya *',
-                          hintText: 'hal. Tinapay, Biskwit, o Ice Cream',
-                          prefixIcon: Icon(Icons.new_label_rounded),
+                        decoration: InputDecoration(
+                          labelText: isTl ? 'Pangalan ng Bagong Kategorya *' : 'New Category Name *',
+                          hintText: isTl ? 'hal. Tinapay, Biskwit, o Ice Cream' : 'e.g., Bread, Biscuits, or Ice Cream',
+                          prefixIcon: const Icon(Icons.new_label_rounded),
                         ),
                         validator: (v) {
                           if (_isCreatingNewCategory && (v == null || v.trim().isEmpty)) {
-                            return 'Kailangan ang pangalan ng bagong kategorya';
+                            return isTl
+                                ? 'Kailangan ang pangalan ng bagong kategorya'
+                                : 'New category name is required';
                           }
                           return null;
                         },
@@ -697,15 +738,17 @@ class _AddEditProductSheetState extends State<AddEditProductSheet> {
                         controller: _priceCtrl,
                         keyboardType: const TextInputType.numberWithOptions(decimal: true),
                         onChanged: (_) => setState(() {}),
-                        decoration: const InputDecoration(
-                          labelText: 'Presyo (₱) *',
+                        decoration: InputDecoration(
+                          labelText: isTl ? 'Presyo (₱) *' : 'Price (₱) *',
                           hintText: '0.00',
                           prefixText: '₱ ',
                         ),
                         validator: (v) {
-                          if (v == null || v.trim().isEmpty) return 'Kailangan ang presyo';
+                          if (v == null || v.trim().isEmpty) {
+                            return isTl ? 'Kailangan ang presyo' : 'Price is required';
+                          }
                           final cents = CurrencyFormatter.parsePesosToCentavos(v);
-                          if (cents <= 0) return 'Mas mataas sa 0';
+                          if (cents <= 0) return isTl ? 'Mas mataas sa 0' : 'Must be > 0';
                           return null;
                         },
                       ),
@@ -716,8 +759,8 @@ class _AddEditProductSheetState extends State<AddEditProductSheet> {
                         controller: _costCtrl,
                         keyboardType: const TextInputType.numberWithOptions(decimal: true),
                         onChanged: (_) => setState(() {}),
-                        decoration: const InputDecoration(
-                          labelText: 'Puhunan (₱)',
+                        decoration: InputDecoration(
+                          labelText: isTl ? 'Puhunan (₱)' : 'Cost (₱)',
                           hintText: '0.00',
                           prefixText: '₱ ',
                         ),
@@ -742,7 +785,9 @@ class _AddEditProductSheetState extends State<AddEditProductSheet> {
                       children: [
                         Flexible(
                           child: Text(
-                            profitCents >= 0 ? 'Tubo bawat piraso:' : 'Lugi bawat piraso:',
+                            profitCents >= 0
+                                ? (isTl ? 'Tubo bawat piraso:' : 'Profit per item:')
+                                : (isTl ? 'Lugi bawat piraso:' : 'Loss per item:'),
                             style: TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.w600,
@@ -776,15 +821,17 @@ class _AddEditProductSheetState extends State<AddEditProductSheet> {
                       child: TextFormField(
                         controller: _stockCtrl,
                         keyboardType: TextInputType.number,
-                        decoration: const InputDecoration(
-                          labelText: 'Kasalukuyang Stock *',
+                        decoration: InputDecoration(
+                          labelText: isTl ? 'Kasalukuyang Stock *' : 'Current Stock *',
                           hintText: '10',
-                          prefixIcon: Icon(Icons.inventory_2_outlined),
+                          prefixIcon: const Icon(Icons.inventory_2_outlined),
                         ),
                         validator: (v) {
-                          if (v == null || v.trim().isEmpty) return 'Lagyan ng bilang';
+                          if (v == null || v.trim().isEmpty) {
+                            return isTl ? 'Lagyan ng bilang' : 'Enter stock quantity';
+                          }
                           final n = int.tryParse(v.trim());
-                          if (n == null || n < 0) return 'Hindi negative';
+                          if (n == null || n < 0) return isTl ? 'Hindi negative' : 'Cannot be negative';
                           return null;
                         },
                       ),
@@ -794,14 +841,14 @@ class _AddEditProductSheetState extends State<AddEditProductSheet> {
                       child: TextFormField(
                         controller: _lowStockCtrl,
                         keyboardType: TextInputType.number,
-                        decoration: const InputDecoration(
-                          labelText: 'Low Stock Alert',
+                        decoration: InputDecoration(
+                          labelText: isTl ? 'Low Stock Alert' : 'Low Stock Alert',
                           hintText: '5',
-                          prefixIcon: Icon(Icons.warning_amber_rounded),
+                          prefixIcon: const Icon(Icons.warning_amber_rounded),
                         ),
                         validator: (v) {
                           final n = int.tryParse(v ?? '');
-                          if (n != null && n < 0) return 'Hindi negative';
+                          if (n != null && n < 0) return isTl ? 'Hindi negative' : 'Cannot be negative';
                           return null;
                         },
                       ),
@@ -828,13 +875,15 @@ class _AddEditProductSheetState extends State<AddEditProductSheet> {
                       children: [
                         SwitchListTile(
                           contentPadding: EdgeInsets.zero,
-                          title: const Text(
-                            'Mother Pack (Tingi Support)',
-                            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                          title: Text(
+                            isTl ? 'Mother Pack (Tingi Support)' : 'Mother Pack (Retail Split)',
+                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
                           ),
-                          subtitle: const Text(
-                            'I-link ang pack na ito sa tingi piraso (hal. Pack ng Sigarilyo o Box ng Sabon)',
-                            style: TextStyle(fontSize: 11),
+                          subtitle: Text(
+                            isTl
+                                ? 'I-link ang pack na ito sa tingi piraso (hal. Pack ng Sigarilyo o Box ng Sabon)'
+                                : 'Link this pack to retail piece (e.g. Cigarette Pack or Soap Bar Box)',
+                            style: const TextStyle(fontSize: 11),
                           ),
                           value: _isTingiPack,
                           activeColor: AppTheme.accentAmber,
@@ -848,15 +897,17 @@ class _AddEditProductSheetState extends State<AddEditProductSheet> {
                         const Divider(height: 16),
                         DropdownButtonFormField<int>(
                           value: _selectedPieceProductId,
-                          decoration: const InputDecoration(
-                            labelText: 'Piliin ang Tingi / Piraso na Produkto',
-                            prefixIcon: Icon(Icons.link_rounded),
+                          decoration: InputDecoration(
+                            labelText: isTl
+                                ? 'Piliin ang Tingi / Piraso na Produkto'
+                                : 'Select Retail / Piece Product',
+                            prefixIcon: const Icon(Icons.link_rounded),
                           ),
                           items: pieceCandidates
                               .map((p) => DropdownMenuItem(
                                     value: p.id,
                                     child: Text(
-                                      '${p.name} (Stock: ${p.stockQty})',
+                                      '${p.name} (${isTl ? 'Stock' : 'Stock'}: ${p.stockQty})',
                                       overflow: TextOverflow.ellipsis,
                                       style: const TextStyle(fontSize: 13),
                                     ),
@@ -870,15 +921,19 @@ class _AddEditProductSheetState extends State<AddEditProductSheet> {
                         TextFormField(
                           controller: _piecesPerPackCtrl,
                           keyboardType: TextInputType.number,
-                          decoration: const InputDecoration(
-                            labelText: 'Ilang piraso bawat 1 pack? (Pieces per pack)',
-                            hintText: 'hal. 20',
-                            prefixIcon: Icon(Icons.format_list_numbered_rounded),
+                          decoration: InputDecoration(
+                            labelText: isTl
+                                ? 'Ilang piraso bawat 1 pack? (Pieces per pack)'
+                                : 'Pieces per 1 pack',
+                            hintText: isTl ? 'hal. 20' : 'e.g. 20',
+                            prefixIcon: const Icon(Icons.format_list_numbered_rounded),
                           ),
                           validator: (v) {
                             if (_isTingiPack) {
                               final n = int.tryParse(v ?? '');
-                              if (n == null || n <= 1) return 'Dapat higit sa 1 piraso';
+                              if (n == null || n <= 1) {
+                                return isTl ? 'Dapat higit sa 1 piraso' : 'Must be greater than 1 piece';
+                              }
                             }
                             return null;
                           },
@@ -902,10 +957,10 @@ class _AddEditProductSheetState extends State<AddEditProductSheet> {
                       : const Icon(Icons.check_circle_rounded),
                   label: Text(
                     _isSaving
-                        ? 'Sine-save...'
+                        ? (isTl ? 'Sine-save...' : 'Saving...')
                         : isEditing
-                            ? 'I-save ang Pagbabago'
-                            : 'Idagdag sa Tindahan',
+                            ? (isTl ? 'I-save ang Pagbabago' : 'Save Changes')
+                            : (isTl ? 'Idagdag sa Tindahan' : 'Add to Inventory'),
                     style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                   ),
                   style: ElevatedButton.styleFrom(
@@ -924,9 +979,9 @@ class _AddEditProductSheetState extends State<AddEditProductSheet> {
                   OutlinedButton.icon(
                     onPressed: _isSaving ? null : () => _confirmDeleteFromSheet(context),
                     icon: Icon(Icons.delete_outline_rounded, color: AppTheme.dangerRed),
-                    label: const Text(
-                      'I-delete ang Produktong Ito',
-                      style: TextStyle(color: AppTheme.dangerRed, fontWeight: FontWeight.bold),
+                    label: Text(
+                      isTl ? 'I-delete ang Produktong Ito' : 'Delete This Product',
+                      style: const TextStyle(color: AppTheme.dangerRed, fontWeight: FontWeight.bold),
                     ),
                     style: OutlinedButton.styleFrom(
                       side: BorderSide(color: AppTheme.dangerRed),
@@ -946,17 +1001,20 @@ class _AddEditProductSheetState extends State<AddEditProductSheet> {
   }
 
   void _confirmDeleteFromSheet(BuildContext context) {
+    final isTl = context.read<LanguageProvider?>()?.isTagalog ?? false;
     showDialog(
       context: context,
       builder: (dialogCtx) => AlertDialog(
-        title: Text('I-delete si ${widget.product!.name}?'),
-        content: const Text(
-          'Hindi mabubura ang mga nakaraang benta sa ulat o resibo, ngunit itatago ito mula sa benta at imbentaryo.',
+        title: Text(isTl ? 'I-delete si ${widget.product!.name}?' : 'Delete ${widget.product!.name}?'),
+        content: Text(
+          isTl
+              ? 'Hindi mabubura ang mga nakaraang benta sa ulat o resibo, ngunit itatago ito mula sa benta at imbentaryo.'
+              : 'Past sales in reports and receipts will remain intact, but this item will be hidden from sales and inventory.',
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogCtx),
-            child: const Text('Huwag muna'),
+            child: Text(isTl ? 'Huwag muna' : 'Cancel'),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
@@ -970,11 +1028,15 @@ class _AddEditProductSheetState extends State<AddEditProductSheet> {
               Navigator.pop(context);
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
-                  content: Text('Nai-archive na si ${widget.product!.name}.'),
+                  content: Text(
+                    isTl
+                        ? 'Nai-archive na si ${widget.product!.name}.'
+                        : '${widget.product!.name} has been archived.',
+                  ),
                 ),
               );
             },
-            child: const Text('Oo, I-delete'),
+            child: Text(isTl ? 'Oo, I-delete' : 'Yes, Delete'),
           ),
         ],
       ),

@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../../../core/constants.dart';
+import '../../../core/services/home_widget_service.dart';
 import '../../../data/repositories/reports_repository.dart';
 
 class DailySalePoint {
@@ -48,7 +50,22 @@ class HomeProvider extends ChangeNotifier {
   List<TopSellingProduct> get topSellers => List.unmodifiable(_topSellers);
   List<DailySalePoint> get last7DaysSales => _last7DaysSales;
 
-  Future<void> loadDashboard() async {
+  /// Synchronizes current live metrics to the Android Home Screen Widget.
+  Future<void> syncWidget({String? storeName, int lowStockCount = 0}) async {
+    try {
+      await HomeWidgetService.updateSnapshot(
+        HomeWidgetSnapshot(
+          storeName: storeName ?? AppConstants.appName,
+          todaySalesCents: todaySalesCents,
+          todayProfitCents: todayProfitCents,
+          lowStockCount: lowStockCount,
+          lastUpdated: DateTime.now(),
+        ),
+      );
+    } catch (_) {}
+  }
+
+  Future<void> loadDashboard({int lowStockCount = 0}) async {
     _isLoading = true;
     notifyListeners();
 
@@ -57,6 +74,7 @@ class HomeProvider extends ChangeNotifier {
       _weekSummary = await _reportsRepo.getThisWeekStats();
       _monthSummary = await _reportsRepo.getThisMonthStats();
       _topSellers = await _reportsRepo.getTopSellingProducts(limit: 5);
+      await syncWidget(lowStockCount: lowStockCount);
     } catch (_) {
       // Fallback to zero summary on error
     } finally {

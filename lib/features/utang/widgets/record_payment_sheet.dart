@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../../core/constants.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/utils/currency_formatter.dart';
+import '../../../core/localization/language_provider.dart';
 import '../../../data/models/customer.dart';
 import '../../../domain/utang_ledger.dart';
 import '../../../shared/widgets/price_text.dart';
@@ -57,6 +58,7 @@ class _RecordPaymentSheetState extends State<RecordPaymentSheet> {
   }
 
   Future<void> _confirm() async {
+    final isTl = context.read<LanguageProvider?>()?.isTagalog ?? false;
     final pay = _payCents;
     final err = UtangLedger.validatePayment(amountCents: pay, balanceCents: _balance);
     if (err != null) {
@@ -75,19 +77,23 @@ class _RecordPaymentSheetState extends State<RecordPaymentSheet> {
       messenger.showSnackBar(
         SnackBar(
           content: Text(
-            'Payment of ${CurrencyFormatter.format(pay)} recorded for ${widget.customer.name}',
+            isTl
+                ? 'Nai-record na ang bayad na ${CurrencyFormatter.format(pay)} para kay ${widget.customer.name}'
+                : 'Payment of ${CurrencyFormatter.format(pay)} recorded for ${widget.customer.name}',
           ),
           backgroundColor: AppTheme.primaryGreen,
         ),
       );
     } else {
-      setState(() => _error = prov.errorMessage ?? 'Could not record payment');
+      setState(() => _error = prov.errorMessage ?? (isTl ? 'Hindi ma-record ang bayad' : 'Could not record payment'));
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final langProv = context.watch<LanguageProvider?>();
+    final isTl = langProv?.isTagalog ?? false;
     final remaining = (_balance - _payCents).clamp(0, _balance);
 
     return Container(
@@ -111,7 +117,9 @@ class _RecordPaymentSheetState extends State<RecordPaymentSheet> {
                 children: [
                   Expanded(
                     child: Text(
-                      'Pay Utang: ${widget.customer.displayName}',
+                      isTl
+                          ? 'Magbayad ng Utang: ${widget.customer.displayName}'
+                          : 'Pay Utang: ${widget.customer.displayName}',
                       style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -125,19 +133,22 @@ class _RecordPaymentSheetState extends State<RecordPaymentSheet> {
               const SizedBox(height: 8),
               Row(
                 children: [
-                  const Expanded(child: Text('Current Balance:')),
+                  Expanded(child: Text(isTl ? 'Kasalukuyang Utang:' : 'Current Balance:')),
                   PriceText(centavos: _balance, fontSize: 18, color: AppTheme.dangerRed),
                 ],
               ),
               const SizedBox(height: 16),
-              const Text('Quick Payment Amount:', style: TextStyle(fontWeight: FontWeight.bold)),
+              Text(
+                isTl ? 'Mabilisang Halaga ng Bayad:' : 'Quick Payment Amount:',
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
               const SizedBox(height: 8),
               Wrap(
                 spacing: 8,
                 runSpacing: 8,
                 children: [
                   ActionChip(
-                    label: const Text('Full Balance'),
+                    label: Text(isTl ? 'Lahat / Buo' : 'Full Balance'),
                     onPressed: () => _setAmount(_balance),
                   ),
                   for (final c in [5000, 10000, 20000])
@@ -155,14 +166,16 @@ class _RecordPaymentSheetState extends State<RecordPaymentSheet> {
                 keyboardType: const TextInputType.numberWithOptions(decimal: true),
                 onChanged: (_) => setState(() => _error = null),
                 decoration: InputDecoration(
-                  labelText: 'Amount Paid (₱)',
+                  labelText: isTl ? 'Halaga ng Bayad (₱)' : 'Amount Paid (₱)',
                   prefixText: '₱ ',
                   errorText: _error,
                 ),
               ),
               const SizedBox(height: 10),
               Text(
-                'Amount to Pay: ${CurrencyFormatter.format(_payCents)}  •  Remaining: ${CurrencyFormatter.format(remaining)}',
+                isTl
+                    ? 'Ibabayad: ${CurrencyFormatter.format(_payCents)}  •  Matitira: ${CurrencyFormatter.format(remaining)}'
+                    : 'Amount to Pay: ${CurrencyFormatter.format(_payCents)}  •  Remaining: ${CurrencyFormatter.format(remaining)}',
                 style: TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.bold,
@@ -172,7 +185,7 @@ class _RecordPaymentSheetState extends State<RecordPaymentSheet> {
               const SizedBox(height: 18),
               ElevatedButton(
                 onPressed: _saving ? null : _confirm,
-                child: const Text('Confirm Payment'),
+                child: Text(isTl ? 'Kumpirmahin ang Bayad' : 'Confirm Payment'),
               ),
             ],
           ),

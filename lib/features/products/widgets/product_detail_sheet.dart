@@ -8,6 +8,7 @@ import '../../../data/models/product.dart';
 import '../../../shared/widgets/price_text.dart';
 import '../../../shared/widgets/stock_badge.dart';
 import '../../../shared/widgets/product_image_thumbnail.dart';
+import '../../../core/localization/language_provider.dart';
 import '../providers/product_provider.dart';
 import 'add_edit_product_sheet.dart';
 
@@ -28,6 +29,7 @@ class ProductDetailSheet extends StatelessWidget {
 
   void _showRestockDialog(BuildContext context) {
     int addQty = 10;
+    final isTl = context.read<LanguageProvider?>()?.isTagalog ?? true;
     final costCtrl = TextEditingController(
       text: product.costCents > 0
           ? (product.costCents / 100.0).toStringAsFixed(2)
@@ -40,15 +42,19 @@ class ProductDetailSheet extends StatelessWidget {
         return StatefulBuilder(
           builder: (context, setDialogState) {
             return AlertDialog(
-              title: Text('Restock: ${product.name}'),
+              title: Text(isTl ? 'Restock: ${product.name}' : 'Restock: ${product.name}'),
               content: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Kasalukuyang stock: ${product.stockQty} pcs'),
+                  Text(isTl
+                      ? 'Kasalukuyang stock: ${product.stockQty} pcs'
+                      : 'Current stock: ${product.stockQty} pcs'),
                   const SizedBox(height: 16),
-                  const Text('Pumili ng dami:',
-                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                  Text(
+                    isTl ? 'Pumili ng dami:' : 'Select quantity:',
+                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                  ),
                   const SizedBox(height: 8),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -66,8 +72,10 @@ class ProductDetailSheet extends StatelessWidget {
                     controller: costCtrl,
                     keyboardType:
                         const TextInputType.numberWithOptions(decimal: true),
-                    decoration: const InputDecoration(
-                      labelText: 'Bagong Puhunan bawat piraso (Opsyonal)',
+                    decoration: InputDecoration(
+                      labelText: isTl
+                          ? 'Bagong Puhunan bawat piraso (Opsyonal)'
+                          : 'New Cost per unit (Optional)',
                       hintText: '0.00',
                       prefixText: '₱ ',
                     ),
@@ -77,7 +85,7 @@ class ProductDetailSheet extends StatelessWidget {
               actions: [
                 TextButton(
                   onPressed: () => Navigator.pop(dialogCtx),
-                  child: const Text('Kanselahin'),
+                  child: Text(isTl ? 'Kanselahin' : 'Cancel'),
                 ),
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(
@@ -100,12 +108,15 @@ class ProductDetailSheet extends StatelessWidget {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
                         content: Text(
-                            'Matagumpay na nagdagdag ng $addQty pcs kay ${product.name}!'),
+                          isTl
+                              ? 'Matagumpay na nagdagdag ng $addQty pcs kay ${product.name}!'
+                              : 'Successfully added $addQty pcs to ${product.name}!',
+                        ),
                         backgroundColor: AppTheme.primaryGreen,
                       ),
                     );
                   },
-                  child: const Text('I-kumpirma ang Restock'),
+                  child: Text(isTl ? 'I-kumpirma ang Restock' : 'Confirm Restock'),
                 ),
               ],
             );
@@ -117,7 +128,8 @@ class ProductDetailSheet extends StatelessWidget {
 
   void _showAdjustDialog(BuildContext context) {
     int targetQty = product.stockQty;
-    String reason = 'Recount (Aktwal na bilang)';
+    final isTl = context.read<LanguageProvider?>()?.isTagalog ?? true;
+    String reason = isTl ? 'Recount (Aktwal na bilang)' : 'Recount (Physical Count)';
     final noteCtrl = TextEditingController();
 
     showDialog(
@@ -126,12 +138,12 @@ class ProductDetailSheet extends StatelessWidget {
         return StatefulBuilder(
           builder: (context, setDialogState) {
             return AlertDialog(
-              title: Text('I-adjust ang Stock: ${product.name}'),
+              title: Text(isTl ? 'I-adjust ang Stock: ${product.name}' : 'Adjust Stock: ${product.name}'),
               content: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('Itakda ang totoong bilang sa tindahan:'),
+                  Text(isTl ? 'Itakda ang totoong bilang sa tindahan:' : 'Set shop physical inventory count:'),
                   const SizedBox(height: 12),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -160,20 +172,20 @@ class ProductDetailSheet extends StatelessWidget {
                   DropdownButtonFormField<String>(
                     value: reason,
                     isExpanded: true,
-                    decoration: const InputDecoration(labelText: 'Dahilan'),
-                    items: const [
+                    decoration: InputDecoration(labelText: isTl ? 'Dahilan' : 'Reason'),
+                    items: [
                       DropdownMenuItem(
-                          value: 'Recount (Aktwal na bilang)',
-                          child: Text('Recount (Aktwal na bilang)', overflow: TextOverflow.ellipsis)),
+                          value: isTl ? 'Recount (Aktwal na bilang)' : 'Recount (Physical Count)',
+                          child: Text(isTl ? 'Recount (Aktwal na bilang)' : 'Recount (Physical Count)', overflow: TextOverflow.ellipsis)),
                       DropdownMenuItem(
-                          value: 'Damaged (Nasira / Nabutas)',
-                          child: Text('Damaged (Nasira / Nabutas)', overflow: TextOverflow.ellipsis)),
+                          value: isTl ? 'Damaged (Nasira / Nabutas)' : 'Damaged (Spoiled / Broken)',
+                          child: Text(isTl ? 'Damaged (Nasira / Nabutas)' : 'Damaged (Spoiled / Broken)', overflow: TextOverflow.ellipsis)),
                       DropdownMenuItem(
-                          value: 'Expired (Lumipas na petsa)',
-                          child: Text('Expired (Lumipas na petsa)', overflow: TextOverflow.ellipsis)),
+                          value: isTl ? 'Expired (Lumipas na petsa)' : 'Expired (Past Shelf Life)',
+                          child: Text(isTl ? 'Expired (Lumipas na petsa)' : 'Expired (Past Shelf Life)', overflow: TextOverflow.ellipsis)),
                       DropdownMenuItem(
-                          value: 'Personal Use (Kinuha ng may-ari)',
-                          child: Text('Personal Use (Kinuha ng may-ari)', overflow: TextOverflow.ellipsis)),
+                          value: isTl ? 'Personal Use (Kinuha ng may-ari)' : 'Personal Use (Owner Consumed)',
+                          child: Text(isTl ? 'Personal Use (Kinuha ng may-ari)' : 'Personal Use (Owner Consumed)', overflow: TextOverflow.ellipsis)),
                     ],
                     onChanged: (val) {
                       if (val != null) setDialogState(() => reason = val);
@@ -184,7 +196,7 @@ class ProductDetailSheet extends StatelessWidget {
               actions: [
                 TextButton(
                   onPressed: () => Navigator.pop(dialogCtx),
-                  child: const Text('Kanselahin'),
+                  child: Text(isTl ? 'Kanselahin' : 'Cancel'),
                 ),
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(
@@ -202,12 +214,15 @@ class ProductDetailSheet extends StatelessWidget {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
                         content: Text(
-                            'Na-adjust ang stock ni ${product.name} sa $targetQty pcs!'),
+                          isTl
+                              ? 'Na-adjust ang stock ni ${product.name} sa $targetQty pcs!'
+                              : 'Adjusted stock for ${product.name} to $targetQty pcs!',
+                        ),
                         backgroundColor: AppTheme.accentAmber,
                       ),
                     );
                   },
-                  child: const Text('I-save ang Adjustment'),
+                  child: Text(isTl ? 'I-save ang Adjustment' : 'Save Adjustment'),
                 ),
               ],
             );
@@ -218,17 +233,20 @@ class ProductDetailSheet extends StatelessWidget {
   }
 
   void _confirmDelete(BuildContext context) {
+    final isTl = context.read<LanguageProvider?>()?.isTagalog ?? false;
     showDialog(
       context: context,
       builder: (dialogCtx) => AlertDialog(
-        title: Text('I-delete si ${product.name}?'),
-        content: const Text(
-          'Hindi mabubura ang mga nakaraang benta sa ulat o resibo, ngunit itatago ito mula sa benta at listahan ng imbentaryo.',
+        title: Text(isTl ? 'I-delete si ${product.name}?' : 'Delete ${product.name}?'),
+        content: Text(
+          isTl
+              ? 'Hindi mabubura ang mga nakaraang benta sa ulat o resibo, ngunit itatago ito mula sa benta at listahan ng imbentaryo.'
+              : 'Past sales in reports and receipts will remain intact, but this item will be hidden from sales and inventory.',
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogCtx),
-            child: const Text('Huwag muna'),
+            child: Text(isTl ? 'Huwag muna' : 'Cancel'),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
@@ -243,11 +261,15 @@ class ProductDetailSheet extends StatelessWidget {
               Navigator.pop(context);
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
-                  content: Text('Nai-archive na si ${product.name}.'),
+                  content: Text(
+                    isTl
+                        ? 'Nai-archive na si ${product.name}.'
+                        : '${product.name} has been archived.',
+                  ),
                 ),
               );
             },
-            child: const Text('Oo, I-delete'),
+            child: Text(isTl ? 'Oo, I-delete' : 'Yes, Delete'),
           ),
         ],
       ),
@@ -258,6 +280,8 @@ class ProductDetailSheet extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
+    final langProv = context.watch<LanguageProvider?>();
+    final isTl = langProv?.isTagalog ?? true;
     final (catColor, catIcon) = AppTheme.getCategoryStyle(product.categoryName);
 
     final profitCents = product.priceCents - product.costCents;
@@ -382,13 +406,13 @@ class ProductDetailSheet extends StatelessWidget {
                       ),
                       if (product.imagePath != null) ...[
                         const SizedBox(height: 4),
-                        const Row(
+                        Row(
                           children: [
-                            Icon(Icons.photo_camera_rounded, size: 12, color: AppTheme.primaryGreen),
-                            SizedBox(width: 4),
+                            const Icon(Icons.photo_camera_rounded, size: 12, color: AppTheme.primaryGreen),
+                            const SizedBox(width: 4),
                             Text(
-                              'Offline Photo Attached',
-                              style: TextStyle(
+                              isTl ? 'May Litrato' : 'Offline Photo Attached',
+                              style: const TextStyle(
                                 fontSize: 11,
                                 fontWeight: FontWeight.w600,
                                 color: AppTheme.primaryGreen,
@@ -420,20 +444,20 @@ class ProductDetailSheet extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text('Presyo ng Benta',
-                            style: TextStyle(fontSize: 11, color: Colors.grey)),
+                        Text(isTl ? 'Presyo ng Benta' : 'Selling Price',
+                            style: const TextStyle(fontSize: 11, color: Colors.grey)),
                         const SizedBox(height: 2),
                         PriceText(centavos: product.priceCents, fontSize: 20),
                         if (product.costCents > 0) ...[
                           const SizedBox(height: 4),
                           Text(
-                            'Puhunan: ${CurrencyFormatter.format(product.costCents)}',
+                            '${isTl ? 'Puhunan' : 'Cost'}: ${CurrencyFormatter.format(product.costCents)}',
                             style: const TextStyle(
                                 fontSize: 11, color: Colors.grey),
                           ),
                           if (marginPercent != null)
                             Text(
-                              '+${CurrencyFormatter.format(profitCents)} ($marginPercent% tubo)',
+                              '+${CurrencyFormatter.format(profitCents)} ($marginPercent% ${isTl ? 'tubo' : 'profit'})',
                               style: const TextStyle(
                                 fontSize: 11,
                                 fontWeight: FontWeight.bold,
@@ -453,8 +477,8 @@ class ProductDetailSheet extends StatelessWidget {
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
-                      const Text('Kasalukuyang Stock',
-                          style: TextStyle(fontSize: 11, color: Colors.grey)),
+                      Text(isTl ? 'Kasalukuyang Stock' : 'Current Stock',
+                          style: const TextStyle(fontSize: 11, color: Colors.grey)),
                       const SizedBox(height: 4),
                       Text(
                         '${product.stockQty} pcs',
@@ -495,16 +519,18 @@ class ProductDetailSheet extends StatelessWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text(
-                            'Tingi Pack Available',
-                            style: TextStyle(
+                          Text(
+                            isTl ? 'Tingi Pack Available' : 'Retail Split Available',
+                            style: const TextStyle(
                               fontWeight: FontWeight.bold,
                               fontSize: 13,
                               color: AppTheme.accentAmber,
                             ),
                           ),
                           Text(
-                            'Ang 1 pack ay naglalaman ng ${product.piecesPerPack} piraso.',
+                            isTl
+                                ? 'Ang 1 pack ay naglalaman ng ${product.piecesPerPack} piraso.'
+                                : 'Each 1 pack contains ${product.piecesPerPack} retail pieces.',
                             style: const TextStyle(fontSize: 11),
                           ),
                         ],
@@ -530,13 +556,16 @@ class ProductDetailSheet extends StatelessWidget {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
                                   content: Text(
-                                      'Binuksan ang 1 pack! Nadagdagan ng ${product.piecesPerPack} pcs ang tingi stock.'),
+                                    isTl
+                                        ? 'Binuksan ang 1 pack! Nadagdagan ng ${product.piecesPerPack} pcs ang tingi stock.'
+                                        : 'Broke 1 pack! Added ${product.piecesPerPack} pcs to retail stock.',
+                                  ),
                                   backgroundColor: AppTheme.primaryGreen,
                                 ),
                               );
                             },
-                      child: const Text('Buksan (Break)',
-                          style: TextStyle(
+                      child: Text(isTl ? 'Buksan (Break)' : 'Break Pack',
+                          style: const TextStyle(
                               fontSize: 12, fontWeight: FontWeight.bold)),
                     ),
                   ],
@@ -576,8 +605,8 @@ class ProductDetailSheet extends StatelessWidget {
                     ),
                     onPressed: () => _showAdjustDialog(context),
                     icon: const Icon(Icons.tune_rounded, size: 18),
-                    label: const Text('I-adjust',
-                        style: TextStyle(fontWeight: FontWeight.bold)),
+                    label: Text(isTl ? 'I-adjust' : 'Adjust',
+                        style: const TextStyle(fontWeight: FontWeight.bold)),
                   ),
                 ),
               ],
@@ -592,7 +621,7 @@ class ProductDetailSheet extends StatelessWidget {
                       AddEditProductSheet.show(context, product: product);
                     },
                     icon: const Icon(Icons.edit_outlined, size: 18),
-                    label: const Text('I-edit ang Detalye'),
+                    label: Text(isTl ? 'I-edit ang Detalye' : 'Edit Details'),
                   ),
                 ),
                 TextButton.icon(
@@ -601,7 +630,7 @@ class ProductDetailSheet extends StatelessWidget {
                   ),
                   onPressed: () => _confirmDelete(context),
                   icon: const Icon(Icons.delete_outline_rounded, size: 18),
-                  label: const Text('I-delete'),
+                  label: Text(isTl ? 'I-delete' : 'Delete'),
                 ),
               ],
             ),

@@ -5,8 +5,7 @@ import 'package:provider/provider.dart';
 import '../../../core/constants.dart';
 import '../../../core/localization/language_provider.dart';
 import '../../../core/strings.dart';
-import '../../../core/theme/app_theme.dart';
-import '../../../core/theme/theme_provider.dart';
+
 import '../../../shared/widgets/price_text.dart';
 import '../../../shared/widgets/stat_card.dart';
 import '../../../shared/widgets/stock_badge.dart';
@@ -14,6 +13,7 @@ import '../../gamification/gamification_provider.dart';
 import '../../gamification/screens/store_avatar_screen.dart';
 import '../../gamification/widgets/animated_store_avatar.dart';
 import '../../navigation/navigation_provider.dart';
+import '../../notifications/widgets/notification_bell_button.dart';
 import '../../products/providers/product_provider.dart';
 import '../../utang/providers/utang_provider.dart';
 import '../providers/home_provider.dart';
@@ -80,64 +80,7 @@ class HomeScreen extends StatelessWidget {
               );
             },
           ),
-          if (langProv != null)
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 2),
-              child: InkWell(
-                borderRadius: BorderRadius.circular(16),
-                onTap: () {
-                  HapticFeedback.selectionClick();
-                  langProv.toggleLanguage();
-                },
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: AppTheme.primaryGreen.withOpacity(0.14),
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: AppTheme.primaryGreen.withOpacity(0.35)),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(Icons.translate_rounded, size: 14, color: AppTheme.primaryGreen),
-                      const SizedBox(width: 4),
-                      Text(
-                        langProv.languageCode,
-                        style: const TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w900,
-                          color: AppTheme.primaryGreen,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          Consumer<ThemeProvider>(
-            builder: (context, themeProv, _) {
-              final isDark = themeProv.isDark(context);
-              return IconButton(
-                icon: AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 300),
-                  transitionBuilder: (child, anim) => RotationTransition(
-                    turns: anim,
-                    child: FadeTransition(opacity: anim, child: child),
-                  ),
-                  child: Icon(
-                    isDark ? Icons.light_mode_rounded : Icons.dark_mode_rounded,
-                    key: ValueKey<bool>(isDark),
-                    color: isDark ? const Color(0xFFFBBF24) : const Color(0xFF0F172A),
-                  ),
-                ),
-                tooltip: isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode',
-                onPressed: () {
-                  HapticFeedback.lightImpact();
-                  themeProv.toggleTheme(context);
-                },
-              );
-            },
-          ),
+          const NotificationBellButton(),
           IconButton(
             icon: const Icon(Icons.settings_outlined),
             tooltip: AppStrings.navSettings,
@@ -421,7 +364,11 @@ class HomeScreen extends StatelessWidget {
                               productProv.quickRestock(item.id, 10);
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
-                                  content: Text('Restocked 10 pcs of ${item.name}'),
+                                  content: Text(
+                                    isTl
+                                        ? 'Naka-restock ng 10 pcs si ${item.name}'
+                                        : 'Restocked 10 pcs of ${item.name}',
+                                  ),
                                   duration: const Duration(seconds: 2),
                                 ),
                               );

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../../../core/constants.dart';
+import '../../../core/localization/language_provider.dart';
 import '../../../core/strings.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../data/models/product.dart';
@@ -48,6 +49,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
   }
 
   void _showQuickRestock(BuildContext context, Product product) {
+    final isTl = context.read<LanguageProvider?>()?.isTagalog ?? false;
     int addQty = 10;
     showDialog(
       context: context,
@@ -60,10 +62,12 @@ class _ProductsScreenState extends State<ProductsScreen> {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Kasalukuyang stock: ${product.stockQty} pcs'),
+                  Text('${isTl ? "Kasalukuyang stock" : "Current stock"}: ${product.stockQty} pcs'),
                   const SizedBox(height: 16),
-                  const Text('Dami ng idadagdag:',
-                      style: TextStyle(fontWeight: FontWeight.bold)),
+                  Text(
+                    isTl ? 'Dami ng idadagdag:' : 'Quantity to add:',
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
                   const SizedBox(height: 8),
                   Wrap(
                     spacing: 8,
@@ -82,7 +86,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
               actions: [
                 TextButton(
                   onPressed: () => Navigator.pop(ctx),
-                  child: const Text(AppStrings.cancel),
+                  child: Text(isTl ? 'Kanselahin' : 'Cancel'),
                 ),
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(
@@ -97,7 +101,11 @@ class _ProductsScreenState extends State<ProductsScreen> {
                     Navigator.pop(ctx);
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
-                        content: Text('Nagdagdag ng $addQty pcs kay ${product.name}'),
+                        content: Text(
+                          isTl
+                              ? 'Nagdagdag ng $addQty pcs kay ${product.name}'
+                              : 'Added $addQty pcs to ${product.name}',
+                        ),
                         backgroundColor: AppTheme.primaryGreen,
                       ),
                     );
@@ -113,17 +121,20 @@ class _ProductsScreenState extends State<ProductsScreen> {
   }
 
   void _confirmDeleteProduct(BuildContext context, Product product) {
+    final isTl = context.read<LanguageProvider?>()?.isTagalog ?? true;
     showDialog(
       context: context,
       builder: (dialogCtx) => AlertDialog(
-        title: Text('I-delete si ${product.name}?'),
-        content: const Text(
-          'Hindi mabubura ang mga nakaraang benta sa ulat o resibo, ngunit itatago ito mula sa benta at imbentaryo.',
+        title: Text(isTl ? 'I-delete si ${product.name}?' : 'Delete ${product.name}?'),
+        content: Text(
+          isTl
+              ? 'Hindi mabubura ang mga nakaraang benta sa ulat o resibo, ngunit itatago ito mula sa benta at imbentaryo.'
+              : 'Previous sales records will be preserved, but this product will be hidden from inventory and sales.',
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogCtx),
-            child: const Text('Huwag muna'),
+            child: Text(isTl ? 'Huwag muna' : 'Cancel'),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
@@ -136,12 +147,16 @@ class _ProductsScreenState extends State<ProductsScreen> {
               Navigator.pop(dialogCtx);
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
-                  content: Text('Nai-archive na si ${product.name}.'),
+                  content: Text(
+                    isTl
+                        ? 'Nai-archive na si ${product.name}.'
+                        : '${product.name} has been archived.',
+                  ),
                   backgroundColor: AppTheme.dangerRed,
                 ),
               );
             },
-            child: const Text('Oo, I-delete'),
+            child: Text(isTl ? 'Oo, I-delete' : 'Yes, Delete'),
           ),
         ],
       ),
@@ -152,24 +167,26 @@ class _ProductsScreenState extends State<ProductsScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final productProv = context.watch<ProductProvider>();
+    final langProv = context.watch<LanguageProvider?>();
+    final isTl = langProv?.isTagalog ?? true;
     final products = productProv.filteredProducts;
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          AppStrings.productsTitle,
-          style: TextStyle(fontWeight: FontWeight.w900, letterSpacing: -0.3),
+        title: Text(
+          isTl ? 'Paninda' : 'Inventory',
+          style: const TextStyle(fontWeight: FontWeight.w900, letterSpacing: -0.3),
         ),
         actions: [
           IconButton(
             key: const Key('products_scan_barcode_btn'),
             icon: const Icon(Icons.qr_code_scanner_rounded),
-            tooltip: AppStrings.scanBarcode,
+            tooltip: isTl ? 'I-scan ang Barcode' : AppStrings.scanBarcode,
             onPressed: () => _handleBarcodeScan(context),
           ),
           IconButton(
             icon: const Icon(Icons.refresh_rounded),
-            tooltip: 'I-refresh ang Imbentaryo',
+            tooltip: isTl ? 'I-refresh ang Imbentaryo' : 'Refresh Inventory',
             onPressed: () async {
               HapticFeedback.lightImpact();
               await productProv.loadProducts();
@@ -192,7 +209,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
                     controller: _searchCtrl,
                     onChanged: productProv.setSearchQuery,
                     decoration: InputDecoration(
-                      hintText: AppStrings.searchProductsHint,
+                      hintText: isTl ? 'Maghanap ng paninda o barcode...' : AppStrings.searchProductsHint,
                       prefixIcon: const Icon(Icons.search_rounded),
                       suffixIcon: _searchCtrl.text.isNotEmpty
                           ? IconButton(
@@ -244,7 +261,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
 
                 return ChoiceChip(
                   avatar: Icon(catIcon, size: 16, color: isSelected ? Colors.white : catColor),
-                  label: Text(category),
+                  label: Text(category == 'All' ? (isTl ? 'Lahat' : 'All') : category),
                   selected: isSelected,
                   selectedColor: catColor,
                   onSelected: (_) {
@@ -263,10 +280,12 @@ class _ProductsScreenState extends State<ProductsScreen> {
             child: RefreshIndicator(
               onRefresh: () => productProv.loadProducts(),
               child: products.isEmpty
-                  ? const EmptyState(
+                  ? EmptyState(
                       icon: Icons.inventory_outlined,
-                      title: 'Walang nahanap na produkto',
-                      description: 'Subukang baguhin ang filter o mag-search ng ibang pangalan.',
+                      title: isTl ? 'Walang nahanap na paninda' : 'No products found',
+                      description: isTl
+                          ? 'Subukang baguhin ang filter o mag-search ng ibang pangalan.'
+                          : 'Try changing your filter or searching for another item.',
                     )
                   : ListView.separated(
                       padding: const EdgeInsets.only(
@@ -438,44 +457,50 @@ class _ProductsScreenState extends State<ProductsScreen> {
                                           const SizedBox(width: 6),
 
                                           // Direct Edit Button
-                                          InkWell(
-                                            borderRadius: BorderRadius.circular(6),
-                                            onTap: () {
-                                              HapticFeedback.lightImpact();
-                                              AddEditProductSheet.show(context, product: item);
-                                            },
-                                            child: Container(
-                                              padding: const EdgeInsets.all(5),
-                                              decoration: BoxDecoration(
-                                                color: AppTheme.accentBlue.withOpacity(0.12),
-                                                borderRadius: BorderRadius.circular(6),
-                                              ),
-                                              child: const Icon(
-                                                Icons.edit_outlined,
-                                                size: 14,
-                                                color: AppTheme.accentBlue,
+                                          Tooltip(
+                                            message: isTl ? 'I-edit' : 'Edit',
+                                            child: InkWell(
+                                              borderRadius: BorderRadius.circular(6),
+                                              onTap: () {
+                                                HapticFeedback.lightImpact();
+                                                AddEditProductSheet.show(context, product: item);
+                                              },
+                                              child: Container(
+                                                padding: const EdgeInsets.all(5),
+                                                decoration: BoxDecoration(
+                                                  color: AppTheme.accentBlue.withOpacity(0.12),
+                                                  borderRadius: BorderRadius.circular(6),
+                                                ),
+                                                child: const Icon(
+                                                  Icons.edit_outlined,
+                                                  size: 14,
+                                                  color: AppTheme.accentBlue,
+                                                ),
                                               ),
                                             ),
                                           ),
                                           const SizedBox(width: 6),
 
                                           // Direct Delete Button
-                                          InkWell(
-                                            borderRadius: BorderRadius.circular(6),
-                                            onTap: () {
-                                              HapticFeedback.lightImpact();
-                                              _confirmDeleteProduct(context, item);
-                                            },
-                                            child: Container(
-                                              padding: const EdgeInsets.all(5),
-                                              decoration: BoxDecoration(
-                                                color: AppTheme.dangerRed.withOpacity(0.12),
-                                                borderRadius: BorderRadius.circular(6),
-                                              ),
-                                              child: const Icon(
-                                                Icons.delete_outline_rounded,
-                                                size: 14,
-                                                color: AppTheme.dangerRed,
+                                          Tooltip(
+                                            message: isTl ? 'I-delete' : 'Delete',
+                                            child: InkWell(
+                                              borderRadius: BorderRadius.circular(6),
+                                              onTap: () {
+                                                HapticFeedback.lightImpact();
+                                                _confirmDeleteProduct(context, item);
+                                              },
+                                              child: Container(
+                                                padding: const EdgeInsets.all(5),
+                                                decoration: BoxDecoration(
+                                                  color: AppTheme.dangerRed.withOpacity(0.12),
+                                                  borderRadius: BorderRadius.circular(6),
+                                                ),
+                                                child: const Icon(
+                                                  Icons.delete_outline_rounded,
+                                                  size: 14,
+                                                  color: AppTheme.dangerRed,
+                                                ),
                                               ),
                                             ),
                                           ),

@@ -5,6 +5,7 @@ import '../../../core/constants.dart';
 import '../../../core/strings.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/utils/currency_formatter.dart';
+import '../../../core/localization/language_provider.dart';
 import '../../../shared/widgets/price_text.dart';
 import '../../../shared/widgets/stock_badge.dart';
 import '../../../shared/widgets/empty_state.dart';
@@ -57,6 +58,7 @@ class _SellScreenState extends State<SellScreen> {
 
     final productProv = context.read<ProductProvider>();
     final cartProv = context.read<CartProvider>();
+    final isTl = context.read<LanguageProvider?>()?.isTagalog ?? false;
     final product = await productProv.findProductByBarcode(code);
 
     if (!context.mounted) return;
@@ -66,7 +68,9 @@ class _SellScreenState extends State<SellScreen> {
       if (added) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Added ${product.name} to cart'),
+            content: Text(
+              isTl ? 'Nai-dagdag ang ${product.name} sa cart' : 'Added ${product.name} to cart',
+            ),
             backgroundColor: AppTheme.primaryGreen,
             duration: const Duration(milliseconds: 1500),
           ),
@@ -84,21 +88,23 @@ class _SellScreenState extends State<SellScreen> {
       showDialog(
         context: context,
         builder: (dialogCtx) => AlertDialog(
-          title: const Text('Unregistered Barcode'),
+          title: Text(isTl ? 'Hindi Rehistradong Barcode' : 'Unregistered Barcode'),
           content: Text(
-            'No product found with barcode "$code". Would you like to register it as a new product?',
+            isTl
+                ? 'Walang nahanap na produktong may barcode "$code". Gusto mo bang irehistro ito bilang bagong paninda?'
+                : 'No product found with barcode "$code". Would you like to register it as a new product?',
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(dialogCtx),
-              child: const Text(AppStrings.cancel),
+              child: Text(isTl ? 'Kanselahin' : AppStrings.cancel),
             ),
             ElevatedButton(
               onPressed: () {
                 Navigator.pop(dialogCtx);
                 AddEditProductSheet.show(context, initialBarcode: code);
               },
-              child: const Text('Register Product'),
+              child: Text(isTl ? 'Irehistro ang Produkto' : 'Register Product'),
             ),
           ],
         ),
@@ -111,15 +117,20 @@ class _SellScreenState extends State<SellScreen> {
     final theme = Theme.of(context);
     final productProv = context.watch<ProductProvider>();
     final cartProv = context.watch<CartProvider>();
+    final langProv = context.watch<LanguageProvider?>();
+    final isTl = langProv?.isTagalog ?? false;
     final products = productProv.filteredProducts;
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text(AppStrings.navSell, style: TextStyle(fontWeight: FontWeight.bold)),
+        title: Text(
+          isTl ? 'Benta' : 'Sell',
+          style: const TextStyle(fontWeight: FontWeight.bold),
+        ),
         actions: [
           IconButton(
             icon: const Icon(Icons.history_rounded),
-            tooltip: 'Sales History',
+            tooltip: isTl ? 'Kasaysayan ng Benta' : 'Sales History',
             onPressed: () {
               HapticFeedback.lightImpact();
               _showSalesHistorySheet(context);
@@ -137,7 +148,7 @@ class _SellScreenState extends State<SellScreen> {
                     controller: _searchCtrl,
                     onChanged: productProv.setSearchQuery,
                     decoration: InputDecoration(
-                      hintText: AppStrings.searchProductsHint,
+                      hintText: isTl ? 'Maghanap ng produkto o brand...' : 'Search product or brand...',
                       prefixIcon: const Icon(Icons.search_rounded),
                       suffixIcon: _searchCtrl.text.isNotEmpty
                           ? IconButton(
@@ -162,7 +173,7 @@ class _SellScreenState extends State<SellScreen> {
                   child: IconButton(
                     key: const Key('sell_scan_barcode_btn'),
                     icon: Icon(Icons.qr_code_scanner_rounded, color: theme.colorScheme.primary),
-                    tooltip: AppStrings.scanBarcode,
+                    tooltip: isTl ? 'I-scan ang Barcode' : 'Scan Barcode',
                     onPressed: () => _handleBarcodeScan(context),
                   ),
                 ),
@@ -174,9 +185,11 @@ class _SellScreenState extends State<SellScreen> {
       body: products.isEmpty
           ? EmptyState(
               icon: Icons.inventory_2_outlined,
-              title: 'No products match',
-              description: 'Try searching another keyword or check category filters.',
-              actionLabel: 'Clear Search',
+              title: isTl ? 'Walang katugmang produkto' : 'No products match',
+              description: isTl
+                  ? 'Subukang mag-type ng ibang salita o suriin ang kategorya.'
+                  : 'Try searching another keyword or check category filters.',
+              actionLabel: isTl ? 'Burahin ang Paghahanap' : 'Clear Search',
               onAction: () {
                 _searchCtrl.clear();
                 productProv.setSearchQuery('');
@@ -410,6 +423,8 @@ class _FloatingCartBar extends StatelessWidget {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final cart = context.watch<CartProvider>();
+    final langProv = context.watch<LanguageProvider?>();
+    final isTl = langProv?.isTagalog ?? false;
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -444,7 +459,7 @@ class _FloatingCartBar extends StatelessWidget {
               child: Stack(
                 clipBehavior: Clip.none,
                 children: [
-                  Icon(Icons.shopping_bag_rounded, color: AppTheme.primaryGreen, size: 22),
+                  const Icon(Icons.shopping_bag_rounded, color: AppTheme.primaryGreen, size: 22),
                   Positioned(
                     top: -4,
                     right: -6,
@@ -474,7 +489,7 @@ class _FloatingCartBar extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    '${cart.items.length} uri ng paninda',
+                    isTl ? '${cart.items.length} uri ng paninda' : '${cart.items.length} item types',
                     style: TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.w600,
@@ -494,12 +509,12 @@ class _FloatingCartBar extends StatelessWidget {
                 minimumSize: const Size(125, 46),
                 padding: const EdgeInsets.symmetric(horizontal: 16),
               ),
-              child: const Row(
+              child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text('Tingnan'),
-                  SizedBox(width: 4),
-                  Icon(Icons.arrow_forward_rounded, size: 16),
+                  const Text('Tingnan'),
+                  const SizedBox(width: 4),
+                  const Icon(Icons.arrow_forward_rounded, size: 16),
                 ],
               ),
             ),
@@ -526,6 +541,8 @@ class _CartBottomSheetContent extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final cartProv = context.watch<CartProvider>();
+    final langProv = context.watch<LanguageProvider?>();
+    final isTl = langProv?.isTagalog ?? false;
 
     return Container(
       height: MediaQuery.of(context).size.height * 0.75,
@@ -552,7 +569,9 @@ class _CartBottomSheetContent extends StatelessWidget {
               children: [
                 Expanded(
                   child: Text(
-                    '${AppStrings.cartTitle} (${cartProv.itemCount})',
+                    isTl
+                        ? 'Kasalukuyang Cart (${cartProv.itemCount})'
+                        : '${AppStrings.cartTitle} (${cartProv.itemCount})',
                     style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -560,7 +579,7 @@ class _CartBottomSheetContent extends StatelessWidget {
                 TextButton.icon(
                   onPressed: cartProv.clearCart,
                   icon: const Icon(Icons.delete_outline, size: 18, color: Colors.red),
-                  label: const Text('Clear', style: TextStyle(color: Colors.red)),
+                  label: Text(isTl ? 'Burahin' : 'Clear', style: const TextStyle(color: Colors.red)),
                 ),
               ],
             ),
@@ -568,10 +587,12 @@ class _CartBottomSheetContent extends StatelessWidget {
           const Divider(height: 1),
           Expanded(
             child: cartProv.items.isEmpty
-                ? const EmptyState(
+                ? EmptyState(
                     icon: Icons.remove_shopping_cart_outlined,
-                    title: 'Your cart is empty',
-                    description: 'Add products from the shelf grid to check out.',
+                    title: isTl ? 'Walang laman ang cart' : 'Your cart is empty',
+                    description: isTl
+                        ? 'Pumili ng mga paninda sa estante para makapag-benta.'
+                        : 'Add products from the shelf grid to check out.',
                   )
                 : ListView.separated(
                     padding: const EdgeInsets.all(AppConstants.space16),
@@ -593,9 +614,13 @@ class _CartBottomSheetContent extends StatelessWidget {
                           if (removed != null) {
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
-                                content: Text('Removed ${removed.product.name}'),
+                                content: Text(
+                                  isTl
+                                      ? 'Tinanggal si ${removed.product.name}'
+                                      : 'Removed ${removed.product.name}',
+                                ),
                                 action: SnackBarAction(
-                                  label: AppStrings.undo,
+                                  label: isTl ? 'Ibalik' : AppStrings.undo,
                                   onPressed: () => cartProv.restoreItem(removed),
                                 ),
                               ),
@@ -628,7 +653,7 @@ class _CartBottomSheetContent extends StatelessWidget {
                                   ),
                                   const SizedBox(height: 2),
                                   Text(
-                                    '${CurrencyFormatter.format(item.product.priceCents)} each',
+                                    '${CurrencyFormatter.format(item.product.priceCents)} ${isTl ? "bawat piraso" : "each"}',
                                     style: TextStyle(
                                       fontSize: 12,
                                       color: theme.colorScheme.onSurface.withOpacity(0.6),
@@ -682,9 +707,9 @@ class _CartBottomSheetContent extends StatelessWidget {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text(
-                        AppStrings.total,
-                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                      Text(
+                        isTl ? 'Kabuuan' : AppStrings.total,
+                        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                       ),
                       PriceText(centavos: cartProv.totalCents, fontSize: 22),
                     ],
@@ -718,6 +743,8 @@ class _PaymentSheetContent extends StatelessWidget {
     final cartProv = context.watch<CartProvider>();
     final productProv = context.read<ProductProvider>();
     final utangProv = context.watch<UtangProvider>();
+    final langProv = context.watch<LanguageProvider?>();
+    final isTl = langProv?.isTagalog ?? false;
 
     return Container(
       padding: const EdgeInsets.all(AppConstants.space20),
@@ -733,10 +760,10 @@ class _PaymentSheetContent extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Expanded(
+                Expanded(
                   child: Text(
-                    AppStrings.paymentTitle,
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    isTl ? 'Pumili ng Paraan ng Pagbabayad' : AppStrings.paymentTitle,
+                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
@@ -750,16 +777,16 @@ class _PaymentSheetContent extends StatelessWidget {
 
             // Segmented Cash vs Utang Mode
             SegmentedButton<PaymentMode>(
-              segments: const [
+              segments: [
                 ButtonSegment(
                   value: PaymentMode.cash,
-                  icon: Icon(Icons.payments_outlined),
-                  label: Text(AppStrings.paymentCash),
+                  icon: const Icon(Icons.payments_outlined),
+                  label: Text(isTl ? 'Cash' : AppStrings.paymentCash),
                 ),
                 ButtonSegment(
                   value: PaymentMode.utang,
-                  icon: Icon(Icons.menu_book_rounded),
-                  label: Text(AppStrings.paymentUtang),
+                  icon: const Icon(Icons.menu_book_rounded),
+                  label: Text(isTl ? 'Utang' : AppStrings.paymentUtang),
                 ),
               ],
               selected: {cartProv.paymentMode},
@@ -771,7 +798,7 @@ class _PaymentSheetContent extends StatelessWidget {
             if (cartProv.paymentMode == PaymentMode.cash) ...[
               // Quick Cash Chips
               Text(
-                AppStrings.cashTendered,
+                isTl ? 'Natanggap na Bayad' : AppStrings.cashTendered,
                 style: TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.bold,
@@ -784,7 +811,7 @@ class _PaymentSheetContent extends StatelessWidget {
                 runSpacing: 8,
                 children: [
                   ActionChip(
-                    label: const Text(AppStrings.exactAmount),
+                    label: Text(isTl ? 'Sakto' : AppStrings.exactAmount),
                     backgroundColor: cartProv.cashReceivedCents == cartProv.totalCents
                         ? theme.colorScheme.primaryContainer
                         : null,
@@ -812,10 +839,10 @@ class _PaymentSheetContent extends StatelessWidget {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Flexible(
+                    Flexible(
                       child: Text(
-                        AppStrings.change,
-                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                        isTl ? 'Sukli' : AppStrings.change,
+                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
@@ -831,7 +858,7 @@ class _PaymentSheetContent extends StatelessWidget {
             ] else ...[
               // Utang Mode: Customer Selector
               Text(
-                AppStrings.chooseCustomer,
+                isTl ? 'Piliin ang Mamimili na Mag-uutang' : AppStrings.chooseCustomer,
                 style: TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.bold,
@@ -842,14 +869,14 @@ class _PaymentSheetContent extends StatelessWidget {
               DropdownButtonFormField<int>(
                 value: cartProv.selectedCustomer?.id,
                 isExpanded: true,
-                decoration: const InputDecoration(
-                  hintText: 'Select registered customer',
+                decoration: InputDecoration(
+                  hintText: isTl ? 'Pumili ng rehistradong mamimili' : 'Select registered customer',
                 ),
                 items: utangProv.allCustomers.map((cust) {
                   return DropdownMenuItem<int>(
                     value: cust.id,
                     child: Text(
-                      '${cust.displayName} (Balance: ${CurrencyFormatter.format(cust.balanceCents)})',
+                      '${cust.displayName} (${isTl ? "Utang" : "Balance"}: ${CurrencyFormatter.format(cust.balanceCents)})',
                       overflow: TextOverflow.ellipsis,
                     ),
                   );
@@ -938,6 +965,7 @@ class _PaymentSheetContent extends StatelessWidget {
     required bool isUtang,
     String? customerName,
   }) {
+    final isTl = context.read<LanguageProvider?>()?.isTagalog ?? false;
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
@@ -1026,7 +1054,7 @@ class _PaymentSheetContent extends StatelessWidget {
                 const SizedBox(height: 24),
                 ElevatedButton(
                   onPressed: () => Navigator.pop(ctx),
-                  child: const Text('Kasunod na Mamimili (Next)'),
+                  child: Text(isTl ? 'Kasunod na Mamimili (Next)' : 'Next Customer'),
                 ),
               ],
             ),
@@ -1041,24 +1069,29 @@ class _SalesHistorySheetContent extends StatelessWidget {
   const _SalesHistorySheetContent();
 
   void _confirmVoidSale(BuildContext context, int saleId, int totalCents) {
-    final reasonCtrl = TextEditingController(text: 'Maling pindot / Kinansela');
+    final isTl = context.read<LanguageProvider?>()?.isTagalog ?? false;
+    final reasonCtrl = TextEditingController(
+      text: isTl ? 'Maling pindot / Kinansela' : 'Wrong input / Cancelled',
+    );
     showDialog(
       context: context,
       builder: (dialogCtx) => AlertDialog(
-        title: Text('I-void ang Sale #$saleId?'),
+        title: Text(isTl ? 'I-void ang Sale #$saleId?' : 'Void Sale #$saleId?'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Ibabalik ang stock ng mga paninda at kakanselahin ang halagang ${CurrencyFormatter.format(totalCents)}.',
+              isTl
+                  ? 'Ibabalik ang stock ng mga paninda at kakanselahin ang halagang ${CurrencyFormatter.format(totalCents)}.'
+                  : 'Items stock will be restored and transaction amount of ${CurrencyFormatter.format(totalCents)} will be reversed.',
               style: const TextStyle(fontSize: 13),
             ),
             const SizedBox(height: 12),
             TextField(
               controller: reasonCtrl,
-              decoration: const InputDecoration(
-                labelText: 'Dahilan ng pag-void',
+              decoration: InputDecoration(
+                labelText: isTl ? 'Dahilan ng pag-void' : 'Reason for voiding',
               ),
             ),
           ],
@@ -1066,7 +1099,7 @@ class _SalesHistorySheetContent extends StatelessWidget {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogCtx),
-            child: const Text('Huwag muna'),
+            child: Text(isTl ? 'Huwag muna' : 'Cancel'),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
@@ -1075,7 +1108,7 @@ class _SalesHistorySheetContent extends StatelessWidget {
             ),
             onPressed: () async {
               final reason = reasonCtrl.text.trim().isEmpty
-                  ? 'Kinansela ng may-ari'
+                  ? (isTl ? 'Kinansela ng may-ari' : 'Cancelled by owner')
                   : reasonCtrl.text.trim();
               final cartProv = context.read<CartProvider>();
               final productProv = context.read<ProductProvider>();
@@ -1091,7 +1124,11 @@ class _SalesHistorySheetContent extends StatelessWidget {
               if (context.mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                    content: Text('Na-void na ang Sale #$saleId at naibalik ang stock.'),
+                    content: Text(
+                      isTl
+                          ? 'Na-void na ang Sale #$saleId at naibalik ang stock.'
+                          : 'Sale #$saleId has been voided and stock restored.',
+                    ),
                   ),
                 );
               }
@@ -1107,6 +1144,8 @@ class _SalesHistorySheetContent extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final cartProv = context.watch<CartProvider>();
+    final langProv = context.watch<LanguageProvider?>();
+    final isTl = langProv?.isTagalog ?? false;
     final sales = cartProv.recentSales;
 
     return Container(
@@ -1148,10 +1187,12 @@ class _SalesHistorySheetContent extends StatelessWidget {
           const Divider(height: 1),
           Expanded(
             child: sales.isEmpty
-                ? const EmptyState(
+                ? EmptyState(
                     icon: Icons.receipt_long_outlined,
-                    title: 'Wala pang benta',
-                    description: 'Makikita rito ang mga katatapos na benta.',
+                    title: isTl ? 'Wala pang benta' : 'No sales recorded yet',
+                    description: isTl
+                        ? 'Makikita rito ang mga katatapos na benta.'
+                        : 'Recent completed sales will appear here.',
                   )
                 : ListView.separated(
                     padding: const EdgeInsets.all(16),

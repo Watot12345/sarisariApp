@@ -5,6 +5,7 @@ import '../../../core/constants.dart';
 import '../../../core/strings.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/utils/currency_formatter.dart';
+import '../../../core/localization/language_provider.dart';
 import '../../../shared/widgets/price_text.dart';
 import '../../../shared/widgets/empty_state.dart';
 import '../providers/utang_provider.dart';
@@ -33,7 +34,7 @@ class _UtangScreenState extends State<UtangScreen> {
     RecordPaymentSheet.show(context, customer);
   }
 
-  Widget _buildRiskChip(String? level) {
+  Widget _buildRiskChip(String? level, bool isTl) {
     Color bg;
     Color fg;
     String label;
@@ -42,22 +43,22 @@ class _UtangScreenState extends State<UtangScreen> {
       case 'low':
         bg = AppTheme.primaryGreen.withOpacity(0.12);
         fg = AppTheme.primaryGreen;
-        label = AppStrings.riskLow;
+        label = isTl ? 'Maaasahan (Good)' : AppStrings.riskLow;
         break;
       case 'medium':
         bg = AppTheme.warningOrange.withOpacity(0.15);
         fg = AppTheme.warningOrange;
-        label = AppStrings.riskMedium;
+        label = isTl ? 'Katamtaman (Med)' : AppStrings.riskMedium;
         break;
       case 'high':
         bg = AppTheme.dangerRed.withOpacity(0.12);
         fg = AppTheme.dangerRed;
-        label = AppStrings.riskHigh;
+        label = isTl ? 'Mataas na Panganib' : AppStrings.riskHigh;
         break;
       default:
         bg = Colors.grey.withOpacity(0.15);
         fg = Colors.grey[700]!;
-        label = AppStrings.riskNew;
+        label = isTl ? 'Bagong Suki' : AppStrings.riskNew;
     }
 
     return Container(
@@ -77,11 +78,16 @@ class _UtangScreenState extends State<UtangScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final utangProv = context.watch<UtangProvider>();
+    final langProv = context.watch<LanguageProvider?>();
+    final isTl = langProv?.isTagalog ?? false;
     final customers = utangProv.filteredCustomers;
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text(AppStrings.utangTitle, style: TextStyle(fontWeight: FontWeight.bold)),
+        title: Text(
+          isTl ? 'Talaan ng Utang' : AppStrings.utangTitle,
+          style: const TextStyle(fontWeight: FontWeight.bold),
+        ),
       ),
       body: Column(
         children: [
@@ -113,9 +119,9 @@ class _UtangScreenState extends State<UtangScreen> {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      AppStrings.totalReceivables,
-                      style: TextStyle(
+                    Text(
+                      isTl ? 'Kabuuang Pautang' : AppStrings.totalReceivables,
+                      style: const TextStyle(
                         color: Colors.white70,
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
@@ -148,7 +154,7 @@ class _UtangScreenState extends State<UtangScreen> {
               controller: _searchCtrl,
               onChanged: utangProv.setSearchQuery,
               decoration: InputDecoration(
-                hintText: AppStrings.searchCustomerHint,
+                hintText: isTl ? 'Maghanap ng suki sa pangalan o alyas...' : AppStrings.searchCustomerHint,
                 prefixIcon: const Icon(Icons.search_rounded),
                 suffixIcon: _searchCtrl.text.isNotEmpty
                     ? IconButton(
@@ -168,10 +174,12 @@ class _UtangScreenState extends State<UtangScreen> {
           // Customer List
           Expanded(
             child: customers.isEmpty
-                ? const EmptyState(
+                ? EmptyState(
                     icon: Icons.people_outline,
-                    title: 'No customers found',
-                    description: 'Add regular neighborhood customers to start tracking utang.',
+                    title: isTl ? 'Walang nahanap na suki' : 'No customers found',
+                    description: isTl
+                        ? 'Maglista ng mga regular na kapitbahay para masubaybayan ang utang.'
+                        : 'Add regular neighborhood customers to start tracking utang.',
                   )
                 : ListView.separated(
                     padding: const EdgeInsets.all(AppConstants.space16),
@@ -210,7 +218,7 @@ class _UtangScreenState extends State<UtangScreen> {
                                         ),
                                       ),
                                       const SizedBox(height: 4),
-                                      _buildRiskChip(customer.riskLevel),
+                                      _buildRiskChip(customer.riskLevel, isTl),
                                     ],
                                   ),
                                 ),
@@ -239,7 +247,10 @@ class _UtangScreenState extends State<UtangScreen> {
                                             HapticFeedback.lightImpact();
                                             _showPaymentBottomSheet(context, customer);
                                           },
-                                          child: const Text('Bayad', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                                          child: const Text(
+                                            'Bayad',
+                                            style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                                          ),
                                         ),
                                       ),
                                   ],
@@ -257,7 +268,7 @@ class _UtangScreenState extends State<UtangScreen> {
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => AddEditCustomerSheet.show(context),
         icon: const Icon(Icons.person_add_alt_1),
-        label: const Text(AppStrings.addCustomer),
+        label: Text(isTl ? 'Bagong Suki' : AppStrings.addCustomer),
       ),
     );
   }

@@ -1,7 +1,9 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'core/constants.dart';
+import 'core/services/home_widget_service.dart';
 import 'core/strings.dart';
 import 'core/theme/app_theme.dart';
 import 'features/home/providers/home_provider.dart';
@@ -17,9 +19,11 @@ import 'features/utang/providers/utang_provider.dart';
 import 'features/utang/screens/utang_screen.dart';
 
 import 'core/localization/language_provider.dart';
+import 'core/services/notification_service.dart';
 import 'core/theme/theme_provider.dart';
 import 'features/gamification/gamification_provider.dart';
 import 'features/gamification/screens/store_avatar_screen.dart';
+import 'features/notifications/providers/notification_provider.dart';
 import 'features/onboarding/providers/onboarding_provider.dart';
 import 'features/onboarding/screens/policy_consent_screen.dart';
 
@@ -35,6 +39,7 @@ class TindahanApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => ThemeProvider()),
         ChangeNotifierProvider(create: (_) => LanguageProvider()),
         ChangeNotifierProvider(create: (_) => GamificationProvider()),
+        ChangeNotifierProvider(create: (_) => NotificationProvider()),
         ChangeNotifierProvider(create: (_) => NavigationProvider()),
         ChangeNotifierProvider(create: (_) => HomeProvider()),
         ChangeNotifierProvider(create: (_) => ProductProvider()),
@@ -74,8 +79,15 @@ class TindahanApp extends StatelessWidget {
 }
 
 /// 5-Tab Navigation Shell with Prominent Center 'Sell' Action Button.
-class AppNavigationShell extends StatelessWidget {
+class AppNavigationShell extends StatefulWidget {
   const AppNavigationShell({super.key});
+
+  @override
+  State<AppNavigationShell> createState() => _AppNavigationShellState();
+}
+
+class _AppNavigationShellState extends State<AppNavigationShell> {
+  StreamSubscription<Uri?>? _widgetSub;
 
   final List<Widget> _screens = const [
     HomeScreen(),
@@ -84,6 +96,32 @@ class AppNavigationShell extends StatelessWidget {
     UtangScreen(),
     ReportsScreen(),
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    HomeWidgetService.getInitiallyLaunchedUri().then((uri) {
+      if (mounted && uri != null) {
+        context.read<NavigationProvider>().handleUri(uri);
+      }
+    });
+
+    _widgetSub = HomeWidgetService.widgetClicked.listen((uri) {
+      if (mounted && uri != null) {
+        context.read<NavigationProvider>().handleUri(uri);
+      }
+    });
+
+    // Initialize local push notification service
+    NotificationService.instance.initialize();
+    NotificationService.instance.requestPermissions();
+  }
+
+  @override
+  void dispose() {
+    _widgetSub?.cancel();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -161,7 +199,7 @@ class AppNavigationShell extends StatelessWidget {
               NavigationDestination(
                 icon: const Icon(Icons.menu_book_outlined),
                 selectedIcon: const Icon(Icons.menu_book_rounded),
-                label: AppStrings.navUtang,
+                label: isTl ? 'Utang' : 'Credit',
               ),
               NavigationDestination(
                 icon: const Icon(Icons.bar_chart_outlined),

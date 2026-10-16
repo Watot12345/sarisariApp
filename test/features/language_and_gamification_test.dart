@@ -42,6 +42,7 @@ void main() {
 
   late LanguageProvider langProv;
   late GamificationProvider gameProv;
+  late ThemeProvider themeProv;
   late NavigationProvider navProv;
   late HomeProvider homeProv;
   late ProductProvider productProv;
@@ -71,6 +72,7 @@ void main() {
     utangRepo = UtangRepository(appDb);
     customerRepo = CustomerRepository(appDb);
 
+    themeProv = ThemeProvider();
     langProv = LanguageProvider();
     gameProv = GamificationProvider();
     navProv = NavigationProvider();
@@ -92,7 +94,7 @@ void main() {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => OnboardingProvider()),
-        ChangeNotifierProvider(create: (_) => ThemeProvider()),
+        ChangeNotifierProvider.value(value: themeProv),
         ChangeNotifierProvider.value(value: langProv),
         ChangeNotifierProvider.value(value: gameProv),
         ChangeNotifierProvider.value(value: navProv),
@@ -176,12 +178,18 @@ void main() {
       expect(find.text("Today's Sales"), findsOneWidget);
       expect(find.byType(StoreAvatarAppBarButton), findsOneWidget);
 
-      // Tap language toggle in Home AppBar (EN -> TL -> EN)
-      await tester.tap(find.text('EN'));
+      // Verify language toggle chip and theme toggle button have been removed from Home AppBar
+      expect(find.text('EN'), findsNothing);
+      expect(find.text('TL'), findsNothing);
+      expect(find.byIcon(Icons.light_mode_rounded), findsNothing);
+      expect(find.byIcon(Icons.dark_mode_rounded), findsNothing);
+
+      // Verify HomeScreen dynamically updates when language is changed
+      langProv.toggleLanguage();
       await tester.pumpAndSettle();
       expect(find.text('Benta Ngayon'), findsOneWidget);
 
-      await tester.tap(find.text('TL'));
+      langProv.toggleLanguage();
       await tester.pumpAndSettle();
       expect(find.text("Today's Sales"), findsOneWidget);
 
@@ -202,7 +210,7 @@ void main() {
       expect(find.textContaining('Every recorded sale'), findsOneWidget);
     });
 
-    testWidgets('LG-04: SettingsScreen allows switching Language and Daily Sales Goal', (tester) async {
+    testWidgets('LG-04: SettingsScreen allows switching Language, Daily Sales Goal, and Theme Mode', (tester) async {
       tester.view.physicalSize = const Size(412, 915);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(tester.view.resetPhysicalSize);
@@ -232,6 +240,14 @@ void main() {
 
       expect(gameProv.dailySalesGoalCents, equals(200000));
       expect(find.text('₱2000'), findsOneWidget);
+
+      // Dark Mode / Light Mode button in SettingsScreen
+      expect(themeProv.themeMode, equals(ThemeMode.system));
+      final themeToggleBtn = find.byTooltip('Switch to Dark Mode');
+      expect(themeToggleBtn, findsOneWidget);
+      await tester.tap(themeToggleBtn);
+      await tester.pumpAndSettle();
+      expect(themeProv.themeMode, equals(ThemeMode.dark));
     });
 
     testWidgets('LG-05: PolicyConsentScreen renders in English by default and supports language toggle', (tester) async {

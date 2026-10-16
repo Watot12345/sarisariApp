@@ -9,6 +9,7 @@ import 'package:tindahan/core/localization/language_provider.dart';
 import 'package:tindahan/core/strings.dart';
 import 'package:tindahan/core/theme/app_theme.dart';
 import 'package:tindahan/core/theme/theme_provider.dart';
+import 'package:tindahan/shared/widgets/empty_state.dart';
 import 'package:tindahan/data/db/app_database.dart';
 import 'package:tindahan/data/db/migrations/m001_initial.dart';
 import 'package:tindahan/data/db/seed.dart';
@@ -358,7 +359,7 @@ void main() {
       expect(cartProv.items, isEmpty);
 
       // Close modal sheet so SnackBar on Scaffold is clickable, then tap Undo
-      Navigator.of(tester.element(find.text('Your cart is empty'))).pop();
+      Navigator.of(tester.element(find.byType(EmptyState))).pop();
       await tester.pumpAndSettle();
       await tester.tap(find.text(AppStrings.undo));
       await tester.pumpAndSettle();

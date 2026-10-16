@@ -32,6 +32,8 @@ dependencies:
   # UI & Charts
   fl_chart: ^0.68.0
   image_picker: ^1.2.4
+  home_widget: ^0.10.0
+  flutter_local_notifications: ^21.0.0
 
 dev_dependencies:
   flutter_test:
