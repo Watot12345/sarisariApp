@@ -289,3 +289,126 @@ graph TD
 4. **Gate D (Barcode & Voice):** Test camera scanner fallback and verify `VoiceCommandParser` unit tests across 15+ English and Tagalog phrases.
 5. **Gate E (Credit & Reports):** Validate itemized debt calculation, partial payments, and profit formula accuracy.
 6. **Gate F (Static Analysis):** Clean `flutter analyze` with zero errors or warnings before final release.
+
+---
+
+## 8. Version 2.0 (`v2.0`) System Requirements & Innovation Roadmap
+
+This section defines the complete functional, UX, and database requirements for **SariMe Version 2.0 (`v2.0`)**, specifically tailored to solve daily operational pain points of Filipino *sari-sari* store owners.
+
+### 8.1 Functional Requirements (v2.0 Modules)
+
+#### FR-V2-01: *"Tingi-Tingi" & Sachet Pack-Breaker* (Bulk-to-Retail Auto-Converter)
+* **Problem Solved:** Store owners buy wholesale cases/ties/sacks (e.g., 1 case = 72 packs, 1 tie = 12 sachets, 1 sack = 25 kg) at wholesale markets (*Puregold / SuySing / Divisoria*) but sell per piece, per *takal*, or fractional weight (`1/4 kg`, `1/2 kg`).
+* **Requirements:**
+  1. **Wholesale Restock Calculator:** Allow entering `Wholesale Pack Qty` (e.g., `1 case`), `Units per Pack` (e.g., `72 pcs`), and `Total Wholesale Cost` (e.g., `₱792.00`).
+  2. **Auto-Unit Cost Computation:** Automatically calculate `unit_cost_cents = round(total_wholesale_cost_cents / units_per_pack)` (`₱11.00/pc`) and increment retail stock by `72`.
+  3. **Fractional / *Tingi* Preset Buttons:** Support fractional unit selling (`1/4`, `1/2`, `1 takal`, `1 tie`) for bulk commodities like rice, cooking oil, sugar, and eggs.
+
+#### FR-V2-02: *Smart "Pamamalengke" List* (Auto-Generated Grocery & Budget Planner)
+* **Problem Solved:** Storekeepers forget which items are critically low when visiting the wholesaler and run out of cash (*kapital*) at checkout when supplier prices fluctuate.
+* **Requirements:**
+  1. **1-Tap Auto-Generation:** Automatically populate a shopping list from products where `stock <= low_stock_threshold`, sorted by 7-day sales velocity (fastest-moving items first).
+  2. **Estimated *Puhunan* Budget Calculator:** Sum `recommended_restock_qty * last_cost_cents` so the owner knows the exact cash budget needed before leaving for the market.
+  3. **In-Aisle Checklist & Live Restock Commit:** Interactive checkboxes while shopping; tapping **"Tapos na Mamalengke (Commit to Stock)"** updates inventory quantities and logs all restock movements in a single batch transaction.
+
+#### FR-V2-03: *GCash / Maya Cash-In, Cash-Out & E-Load "Kaha" Tracker*
+* **Problem Solved:** Neighborhood stores earn daily income from GCash/Maya Cash-In/Cash-Out and E-Load service fees (*patong*), but owners frequently mix up physical cash drawer balances with e-wallet balances.
+* **Requirements:**
+  1. **Dual Balance Tracking:** Maintain separate running balances for **Physical Cash Drawer (*Kaha*)** and **E-Wallet Float (*GCash / Maya / Load Wallet*)**.
+  2. **Transaction Rules:**
+     - **Cash-In:** Decreases E-Wallet balance by principal, increases Physical Cash by `principal + fee_cents`, and logs `fee_cents` as pure net profit.
+     - **Cash-Out:** Increases E-Wallet balance by principal, decreases Physical Cash by `principal` (or `principal - fee_cents`), and logs `fee_cents` as net profit.
+  3. **Configurable Fee Tiers:** Auto-compute standard *sari-sari* fee tiers (e.g., `₱1–₱500 = ₱10 fee`, `₱501–₱1,000 = ₱20 fee`, or custom `2%`).
+
+#### FR-V2-04: *Polite "Paalala sa Utang" Card Generator* (Messenger / SMS Share)
+* **Problem Solved:** Cultural hesitation (*hiya*) when reminding neighbors and *suki* about overdue credit (*utang*).
+* **Requirements:**
+  1. **Friendly Digital Statement Card:** Generate a clean, non-confrontational bilingual summary card or text message showing the store name, itemized *utang* balance, last payment (*hulog*), and due date.
+  2. **1-Tap Native Share (`share_plus`):** Share directly to Facebook Messenger, Viber, or SMS with polite Tagalog/English templates (e.g., *"Magandang araw po! Narito po ang updated digital listahan mula sa SariMe Store. Maraming salamat po sa patuloy na pagtangkilik!"*).
+
+#### FR-V2-05: *Bote / Container Deposit Tracker* (Returnable Glass Bottles & Water Gallons)
+* **Problem Solved:** Financial loss from unreturned returnable glass softdrink/beer bottles (*Coke Mismo/8oz, Red Horse Mucho*) and 5-gallon water containers.
+* **Requirements:**
+  1. **Borrow / Deposit Toggle at Checkout:** Quick toggle to record borrowed bottles/gallons, optional customer name, and bottle deposit amount (`₱5–₱20/bote`).
+  2. **1-Tap Return Resolution:** Mark bottles as returned (refunding deposit if applicable) and show total unreturned bottles on the Home Dashboard.
+
+#### FR-V2-06: *Pre-Loaded "Pinoy Paninda" Offline Barcode Dictionary (500+ Items)*
+* **Problem Solved:** Slow initial onboarding when registering hundreds of common grocery items manually.
+* **Requirements:**
+  1. **Bundled Offline Barcode Catalog:** Include a lightweight local JSON/SQLite lookup table of 500+ common Philippine FMCG barcodes (instant noodles, canned goods, 3-in-1 coffee, laundry sachets, condiments, beverages).
+  2. **Auto-Fill on First Scan:** Scanning an unknown barcode checks the offline catalog and pre-fills the **Product Name**, **Category**, and **Suggested Unit**—requiring the owner to only enter their selling price and current stock.
+
+---
+
+### 8.2 Version 2.0 SQLite Schema Extensions (`m002_v2_features.dart`)
+
+```sql
+-- 1. E-Wallet & Load Float Accounts (GCash, Maya, Load Wallet)
+CREATE TABLE ewallet_accounts (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    provider_name TEXT NOT NULL, -- 'GCash', 'Maya', 'Smart/Globe Load'
+    balance_cents INTEGER NOT NULL DEFAULT 0,
+    updated_at TEXT NOT NULL
+);
+
+-- 2. E-Wallet Cash-In / Cash-Out / E-Load Transactions
+CREATE TABLE ewallet_transactions (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    account_id INTEGER NOT NULL,
+    tx_type TEXT NOT NULL CHECK(tx_type IN ('cash_in', 'cash_out', 'eload', 'topup')),
+    principal_cents INTEGER NOT NULL,
+    fee_cents INTEGER NOT NULL DEFAULT 0,
+    customer_note TEXT,
+    created_at TEXT NOT NULL,
+    FOREIGN KEY (account_id) REFERENCES ewallet_accounts(id) ON DELETE CASCADE
+);
+
+-- 3. Returnable Bottle / Gallon Container Ledger (Bote Tracker)
+CREATE TABLE bottle_deposits (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    borrower_name TEXT NOT NULL,
+    customer_id INTEGER,
+    item_description TEXT NOT NULL, -- e.g. 'Coke 8oz Case (12 bote)', '5-Gal Water Jug'
+    qty INTEGER NOT NULL CHECK(qty > 0),
+    deposit_cents INTEGER NOT NULL DEFAULT 0,
+    status TEXT NOT NULL DEFAULT 'borrowed' CHECK(status IN ('borrowed', 'returned')),
+    borrowed_at TEXT NOT NULL,
+    returned_at TEXT,
+    FOREIGN KEY (customer_id) REFERENCES customers(id) ON DELETE SET NULL
+);
+
+-- 4. Smart Pamamalengke (Restock Shopping List)
+CREATE TABLE shopping_list_items (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    product_id INTEGER,
+    product_name TEXT NOT NULL,
+    target_qty INTEGER NOT NULL DEFAULT 1,
+    estimated_unit_cost_cents INTEGER NOT NULL DEFAULT 0,
+    actual_total_cost_cents INTEGER,
+    is_purchased INTEGER NOT NULL DEFAULT 0,
+    created_at TEXT NOT NULL,
+    FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE SET NULL
+);
+
+-- 5. Offline Pinoy Paninda Barcode Reference Dictionary
+CREATE TABLE barcode_catalog (
+    barcode TEXT PRIMARY KEY,
+    default_name TEXT NOT NULL,
+    category_name TEXT NOT NULL,
+    pack_size_hint INTEGER NOT NULL DEFAULT 1
+);
+```
+
+---
+
+### 8.3 Version 2.0 Implementation Phases
+
+```mermaid
+flowchart TD
+    V2_1["Phase V2-1: Database Migration m002 & Offline Pinoy Barcode Catalog"] --> V2_2["Phase V2-2: Tingi Pack-Breaker & Wholesale Restock Calculator"]
+    V2_2 --> V2_3["Phase V2-3: Smart Pamamalengke List & Puhunan Budget Planner"]
+    V2_3 --> V2_4["Phase V2-4: GCash / Maya Cash-In, Cash-Out & E-Load Kaha Tracker"]
+    V2_4 --> V2_5["Phase V2-5: Polite Paalala sa Utang Share Card & Bote Deposit Tracker"]
+```
+

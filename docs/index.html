@@ -580,6 +580,74 @@
       color: var(--primary);
     }
 
+    /* Developer Card Section */
+    .dev-card {
+      background: var(--surface);
+      border: 1px solid var(--surface-border);
+      border-radius: var(--radius-lg);
+      padding: 36px 28px;
+      margin: 0 auto 56px;
+      max-width: 820px;
+      text-align: center;
+      box-shadow: var(--shadow-md);
+    }
+
+    .dev-badge {
+      display: inline-block;
+      background: var(--primary-light);
+      color: var(--primary-dark);
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      padding: 4px 12px;
+      border-radius: 999px;
+      margin-bottom: 12px;
+    }
+
+    .dev-name {
+      font-family: var(--font-heading);
+      font-size: 26px;
+      font-weight: 800;
+      color: var(--text-main);
+      margin-bottom: 8px;
+    }
+
+    .dev-bio {
+      font-size: 14px;
+      color: var(--text-muted);
+      max-width: 580px;
+      margin: 0 auto 22px;
+    }
+
+    .social-links {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+    }
+
+    .social-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 18px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 600;
+      background: var(--bg);
+      color: var(--text-main);
+      border: 1px solid var(--surface-border);
+      transition: all 0.2s ease;
+    }
+
+    .social-btn:hover {
+      border-color: var(--primary);
+      background: var(--primary-light);
+      color: var(--primary-dark);
+      transform: translateY(-2px);
+    }
+
     /* Animations */
     @keyframes fadeInDown {
       from {
@@ -849,12 +917,45 @@
         <span data-i18n="banner_btn">I-download ang SariMe APK (Libre)</span>
       </a>
     </div>
+
+    <!-- Meet the Developer Section -->
+    <div class="dev-card">
+      <span class="dev-badge" data-i18n="dev_badge">Meet the Developer</span>
+      <h3 class="dev-name">Joshua Sierra</h3>
+      <p class="dev-bio" data-i18n="dev_bio">
+        Filipino Software Developer building practical, offline-first digital tools to empower neighborhood sari-sari store owners. Have feedback, feature ideas, or questions? Connect with me below!
+      </p>
+      <div class="social-links">
+        <a href="https://joshuasierra.vercel.app" target="_blank" rel="noopener noreferrer" class="social-btn">
+          <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>
+          <span>Portfolio Website</span>
+        </a>
+        <a href="https://www.facebook.com/profile.php?id=61590879324960" target="_blank" rel="noopener noreferrer" class="social-btn">
+          <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M22 12c0-5.52-4.48-10-10-10S2 6.48 2 12c0 4.84 3.44 8.87 8 9.8V15H8v-3h2V9.5C10 7.57 11.57 6 13.5 6H16v3h-2c-.55 0-1 .45-1 1v2h3v3h-3v6.95c5.05-.5 9-4.76 9-9.95z"/></svg>
+          <span>Facebook</span>
+        </a>
+        <a href="https://www.instagram.com/jus_wa143?vrfl=cmd6bzlkeDh6eGhi" target="_blank" rel="noopener noreferrer" class="social-btn">
+          <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M7.8 2h8.4C19.4 2 22 4.6 22 7.8v8.4a5.8 5.8 0 0 1-5.8 5.8H7.8C4.6 22 2 19.4 2 16.2V7.8A5.8 5.8 0 0 1 7.8 2zm-.2 2A3.6 3.6 0 0 0 4 7.6v8.8C4 18.39 5.61 20 7.6 20h8.8a3.6 3.6 0 0 0 3.6-3.6V7.6C20 5.61 18.39 4 16.4 4H7.6zm9.65 1.5a1.25 1.25 0 0 1 1.25 1.25A1.25 1.25 0 0 1 17.25 8 1.25 1.25 0 0 1 16 6.75a1.25 1.25 0 0 1 1.25-1.25zM12 7a5 5 0 0 1 5 5 5 5 0 0 1-5 5 5 5 0 0 1-5-5 5 5 0 0 1 5-5zm0 2a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3z"/></svg>
+          <span>Instagram</span>
+        </a>
+        <a href="https://www.tiktok.com/@joshuasierra143" target="_blank" rel="noopener noreferrer" class="social-btn">
+          <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1-.1z"/></svg>
+          <span>TikTok</span>
+        </a>
+        <a href="https://github.com/Watot12345" target="_blank" rel="noopener noreferrer" class="social-btn">
+          <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2A10 10 0 0 0 2 12c0 4.42 2.87 8.17 6.84 9.5.5.08.66-.23.66-.5v-1.69c-2.77.6-3.36-1.34-3.36-1.34-.46-1.16-1.11-1.47-1.11-1.47-.91-.62.07-.6.07-.6 1 .07 1.53 1.03 1.53 1.03.87 1.52 2.34 1.07 2.91.83.09-.65.35-1.09.63-1.34-2.22-.25-4.55-1.11-4.55-4.92 0-1.11.38-2 1.03-2.71-.1-.25-.45-1.29.1-2.64 0 0 .84-.27 2.75 1.02.79-.22 1.65-.33 2.5-.33.85 0 1.71.11 2.5.33 1.91-1.29 2.75-1.02 2.75-1.02.55 1.35.2 2.39.1 2.64.65.71 1.03 1.6 1.03 2.71 0 3.82-2.34 4.66-4.57 4.91.36.31.69.92.69 1.85V21c0 .27.16.59.67.5C19.14 20.16 22 16.42 22 12A10 10 0 0 0 12 2z"/></svg>
+          <span>GitHub</span>
+        </a>
+      </div>
+    </div>
   </section>
 
   <!-- Footer -->
   <footer>
     <div class="container">
       <div class="footer-links">
+        <a href="https://joshuasierra.vercel.app" target="_blank" rel="noopener noreferrer">Joshua Sierra (Portfolio)</a>
+        <span>•</span>
         <a href="https://github.com/Watot12345/sarisariApp" target="_blank" rel="noopener noreferrer">GitHub Repository</a>
         <span>•</span>
         <a href="https://github.com/Watot12345/sarisariApp/releases" target="_blank" rel="noopener noreferrer">All Releases</a>
@@ -863,7 +964,7 @@
         <span>•</span>
         <a href="privacy.html">Privacy Policy &amp; Terms</a>
       </div>
-      <p data-i18n="footer_copy">© 2026 SariMe — Gawa nang may pagmamahal para sa mga Tindahang Pinoy.</p>
+      <p data-i18n="footer_copy">© 2026 SariMe — Developed by Joshua Sierra for Filipino Sari-Sari Stores.</p>
     </div>
   </footer>
 
@@ -928,8 +1029,10 @@
         banner_title: "Ready to modernize your sari-sari store?",
         banner_sub: "Download the free APK now and start managing sales and utang like a pro.",
         banner_btn: "Download Free Android APK",
+        dev_badge: "Meet the Developer",
+        dev_bio: "Filipino Software Developer building practical, offline-first digital tools to empower neighborhood sari-sari store owners. Have feedback, feature ideas, or questions? Connect with me below!",
         footer_guide: "Install Guide",
-        footer_copy: "© 2026 SariMe — Crafted with care for Filipino Sari-Sari Stores."
+        footer_copy: "© 2026 SariMe — Developed by Joshua Sierra for Filipino Sari-Sari Stores."
       },
       tl: {
         nav_download: "Kunin ang APK",
@@ -989,8 +1092,10 @@
         banner_title: "Handa ka na bang i-upgrade ang iyong tindahan?",
         banner_sub: "I-download ang libreng APK ngayon at magtala ng benta at utang nang mas mabilis at organisado.",
         banner_btn: "I-download ang SariMe APK (Libre)",
+        dev_badge: "Ang Developer",
+        dev_bio: "Filipino Software Developer na gumagawa ng praktikal at offline-first na app para sa mga sari-sari store owners. May suhestiyon o tanong ka ba? Mag-message sa aking social media accounts sa ibaba!",
         footer_guide: "Gabay sa Pag-install",
-        footer_copy: "© 2026 SariMe — Gawa nang may pagmamahal para sa mga Tindahang Pinoy."
+        footer_copy: "© 2026 SariMe — Binuo ni Joshua Sierra nang may pagmamahal para sa mga Tindahang Pinoy."
       }
     };
 

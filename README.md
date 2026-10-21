@@ -145,3 +145,16 @@ Administrators can remotely manage active clients via [`docs/status.json`](docs/
 - **Non-Fiscal Bookkeeping Disclaimer**: SariMe is provided *"AS IS"* as an internal digital logbook helper for micro-retailers and does not replace official BIR-accredited fiscal POS machines where required by law.
 - Full policy details are available in [`docs/privacy.html`](docs/privacy.html) and inside the app under **Settings → Privacy Policy**.
 - Licensed under the **[MIT License](LICENSE)**.
+
+---
+
+## 👨‍💻 Developer & Contact
+
+**Joshua Sierra** — *Software Developer*
+
+- 🌐 **Portfolio**: [joshuasierra.vercel.app](https://joshuasierra.vercel.app)
+- 📘 **Facebook**: [facebook.com/profile.php?id=61590879324960](https://www.facebook.com/profile.php?id=61590879324960)
+- 📸 **Instagram**: [@jus_wa143](https://www.instagram.com/jus_wa143?vrfl=cmd6bzlkeDh6eGhi)
+- 🎵 **TikTok**: [@joshuasierra143](https://www.tiktok.com/@joshuasierra143)
+- 💻 **GitHub**: [@Watot12345](https://github.com/Watot12345)
+
