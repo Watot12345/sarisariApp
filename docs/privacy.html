@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Privacy Policy & Terms of Use — SariMe</title>
+  <link rel="icon" type="image/png" href="app_icon.png">
+  <style>
+    :root {
+      --primary: #059669;
+      --bg: #f8fafc;
+      --surface: #ffffff;
+      --border: #e2e8f0;
+      --text: #0f172a;
+      --muted: #475569;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.65;
+      margin: 0;
+      padding: 40px 20px;
+    }
+    .card {
+      max-width: 820px;
+      margin: 0 auto;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 36px;
+      box-shadow: 0 4px 20px rgba(15, 23, 42, 0.05);
+    }
+    h1 { color: var(--primary); margin-top: 0; }
+    h2 { margin-top: 28px; font-size: 1.2rem; color: var(--text); }
+    p, li { color: var(--muted); font-size: 0.96rem; }
+    .back {
+      display: inline-block;
+      margin-bottom: 20px;
+      color: var(--primary);
+      text-decoration: none;
+      font-weight: 600;
+    }
+    .badge {
+      display: inline-block;
+      background: #ecfdf5;
+      color: #047857;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 0.8rem;
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <a href="index.html" class="back">← Back to SariMe Home</a>
+    <div><span class="badge">Last Updated: October 2026</span></div>
+    <h1>Privacy Policy & Terms of Use</h1>
+    <p><strong>SariMe</strong> is an offline-first Point of Sale (POS) and Customer Credit (Utang) Ledger application designed for micro-retail and sari-sari store owners.</p>
+
+    <h2>1. Local-First Data Ownership & Privacy (RA 10173 / GDPR Compliance)</h2>
+    <ul>
+      <li><strong>100% On-Device Store Database:</strong> All products, inventory counts, sales transactions, profit reports, and customer credit (utang) records are stored locally in an SQLite database inside your device's private application storage.</li>
+      <li><strong>No Personal Data Harvesting:</strong> SariMe does not collect, upload, sell, or transmit your store inventory, financial records, or customer lists to any external cloud server.</li>
+      <li><strong>User Control & Data Deletion:</strong> You retain full ownership of your data. You can export a local JSON backup or permanently erase all data at any time via <em>Settings &gt; Reset All Store Data</em> or by uninstalling the application.</li>
+    </ul>
+
+    <h2>2. Device Permissions Disclosure</h2>
+    <ul>
+      <li><strong>Camera (<code>android.permission.CAMERA</code>):</strong> Used solely in real time to scan product barcodes and attach optional local product images. Camera streams are processed on-device and never uploaded.</li>
+      <li><strong>Internet (<code>android.permission.INTERNET</code>):</strong> Used strictly to check GitHub Releases and GitHub Pages for application version updates, service announcements, and maintenance status. No store or customer data is transmitted during update checks.</li>
+      <li><strong>Notifications (<code>android.permission.POST_NOTIFICATIONS</code>):</strong> Used for on-device alerts such as low-stock warnings and customer credit due-date reminders.</li>
+    </ul>
+
+    <h2>3. Terms of Use & Accounting Disclaimer</h2>
+    <ul>
+      <li><strong>As-Is Software Provision:</strong> SariMe is provided "AS IS" without warranty of any kind. Store owners are responsible for verifying their own physical cash counts, credit records, and regular local backup files.</li>
+      <li><strong>Non-Fiscal Bookkeeping Aid:</strong> SariMe is a digital logbook replacement to assist small storekeepers with internal tracking and does not replace official Bureau of Internal Revenue (BIR) registered fiscal point-of-sale machines where required by law.</li>
+    </ul>
+
+    <h2>4. Contact & Open-Source Repository</h2>
+    <p>For questions, bug reports, or release verification, visit our official GitHub repository: <a href="https://github.com/Watot12345/sarisariApp">https://github.com/Watot12345/sarisariApp</a></p>
+  </div>
+</body>
+</html>

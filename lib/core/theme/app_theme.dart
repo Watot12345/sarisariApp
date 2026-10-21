@@ -155,6 +155,11 @@ class AppTheme {
         side: BorderSide.none,
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       ),
+      scrollbarTheme: const ScrollbarThemeData(
+        thumbVisibility: WidgetStatePropertyAll(false),
+        trackVisibility: WidgetStatePropertyAll(false),
+        thickness: WidgetStatePropertyAll(0.0),
+      ),
     );
   }
 
@@ -232,6 +237,11 @@ class AppTheme {
           borderRadius: BorderRadius.circular(14),
           borderSide: const BorderSide(color: primaryGreenDark, width: 2),
         ),
+      ),
+      scrollbarTheme: const ScrollbarThemeData(
+        thumbVisibility: WidgetStatePropertyAll(false),
+        trackVisibility: WidgetStatePropertyAll(false),
+        thickness: WidgetStatePropertyAll(0.0),
       ),
     );
   }

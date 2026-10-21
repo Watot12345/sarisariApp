@@ -14,11 +14,11 @@ class AppDatabase {
   static final AppDatabase instance = AppDatabase._();
 
   static const String _dbName = 'tindahan.db';
-  static const int _dbVersion = 1;
+  static const int _dbVersion = 2;
 
   Database? _database;
 
-  /// Retrieves the active SQLite database instance, opening and seeding if necessary.
+  /// Retrieves the active SQLite database instance, opening and initializing if necessary.
   Future<Database> get database async {
     if (_database != null) return _database!;
     if (kIsWeb) {
@@ -44,10 +44,13 @@ class AppDatabase {
       },
       onCreate: (db, version) async {
         await M001Initial.create(db);
-        await DatabaseSeeder.seedIfEmpty(db);
+        await DatabaseSeeder.seedDefaultsOnly(db);
       },
       onUpgrade: (db, oldVersion, newVersion) async {
-        // Future migrations will be added here
+        if (oldVersion < 2) {
+          // Wipe v1 dummy seed data for clean production release
+          await DatabaseSeeder.resetAllStoreData(db);
+        }
       },
       onOpen: (db) async {
         try {
@@ -57,6 +60,16 @@ class AppDatabase {
         }
       },
     );
+  }
+
+  /// Wipes all products, customers, sales, and utang entries from the database.
+  Future<void> resetAllData() async {
+    try {
+      final db = await database;
+      await DatabaseSeeder.resetAllStoreData(db);
+    } catch (_) {
+      // Safe no-op in memory-only environments
+    }
   }
 
   /// Closes database connection (used during teardown or backups)

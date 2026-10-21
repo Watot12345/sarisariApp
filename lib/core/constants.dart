@@ -8,6 +8,15 @@ class AppConstants {
   static const String appName = 'SariMe';
   static const String appVersion = '1.0.0';
 
+  // Distribution & Release URLs (100% Free via GitHub Releases & GitHub Pages)
+  static const String githubRepo = 'Watot12345/sarisariApp';
+  static const String githubReleasesApiUrl = 'https://api.github.com/repos/Watot12345/sarisariApp/releases/latest';
+  static const String latestApkDownloadUrl = 'https://github.com/Watot12345/sarisariApp/releases/latest/download/app-release.apk';
+  static const String githubReleasesPageUrl = 'https://github.com/Watot12345/sarisariApp/releases';
+  static const String landingPageUrl = 'https://watot12345.github.io/sarisariApp/';
+  static const String remoteStatusUrl = 'https://watot12345.github.io/sarisariApp/status.json';
+  static const String privacyPolicyUrl = 'https://watot12345.github.io/sarisariApp/privacy.html';
+
   // Sizing & Spacing (8-pt grid system)
   static const double space4 = 4.0;
   static const double space8 = 8.0;

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../../../core/constants.dart';
+import '../../../core/localization/language_provider.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/utils/currency_formatter.dart';
 import '../../../data/models/customer.dart';
@@ -64,6 +65,7 @@ class _AddEditCustomerSheetState extends State<AddEditCustomerSheet> {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _saving = true);
     final prov = context.read<UtangProvider>();
+    final isTl = context.read<LanguageProvider?>()?.isTagalog ?? false;
     final messenger = ScaffoldMessenger.of(context);
     final limitCents = CurrencyFormatter.parsePesosToCentavos(_limitCtrl.text);
 
@@ -98,8 +100,8 @@ class _AddEditCustomerSheetState extends State<AddEditCustomerSheet> {
         SnackBar(
           content: Text(
             _isEditing
-                ? 'Updated ${_nameCtrl.text.trim()}'
-                : 'Added ${_nameCtrl.text.trim()} to customers',
+                ? (isTl ? 'Na-update si ${_nameCtrl.text.trim()}' : 'Updated ${_nameCtrl.text.trim()}')
+                : (isTl ? 'Naidagdag si ${_nameCtrl.text.trim()} sa mga suki' : 'Added ${_nameCtrl.text.trim()} to customers'),
           ),
           backgroundColor: AppTheme.primaryGreen,
         ),
@@ -112,6 +114,9 @@ class _AddEditCustomerSheetState extends State<AddEditCustomerSheet> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final langProv = context.watch<LanguageProvider?>();
+    final isTl = langProv?.isTagalog ?? false;
+
     return Container(
       padding: EdgeInsets.only(
         left: 20,
@@ -135,7 +140,9 @@ class _AddEditCustomerSheetState extends State<AddEditCustomerSheet> {
                   children: [
                     Expanded(
                       child: Text(
-                        _isEditing ? 'Edit Customer' : 'New Customer',
+                        _isEditing
+                            ? (isTl ? 'I-edit ang Suki' : 'Edit Customer')
+                            : (isTl ? 'Bagong Suki' : 'New Customer'),
                         style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
                       ),
                     ),
@@ -150,20 +157,20 @@ class _AddEditCustomerSheetState extends State<AddEditCustomerSheet> {
                   key: const Key('customer_name_field'),
                   controller: _nameCtrl,
                   textCapitalization: TextCapitalization.words,
-                  decoration: const InputDecoration(
-                    labelText: 'Customer Name *',
-                    prefixIcon: Icon(Icons.person_outline),
+                  decoration: InputDecoration(
+                    labelText: isTl ? 'Pangalan ng Suki *' : 'Customer Name *',
+                    prefixIcon: const Icon(Icons.person_outline),
                   ),
                   validator: (v) =>
-                      v == null || v.trim().isEmpty ? 'Customer name is required' : null,
+                      v == null || v.trim().isEmpty ? (isTl ? 'Kailangan ang pangalan ng suki' : 'Customer name is required') : null,
                 ),
                 const SizedBox(height: 12),
                 TextFormField(
                   key: const Key('customer_nickname_field'),
                   controller: _nickCtrl,
-                  decoration: const InputDecoration(
-                    labelText: 'Alias / Nickname (e.g. Aling Nena)',
-                    prefixIcon: Icon(Icons.badge_outlined),
+                  decoration: InputDecoration(
+                    labelText: isTl ? 'Alyas / Palayaw (hal. Aling Nena)' : 'Alias / Nickname (e.g. Aling Nena)',
+                    prefixIcon: const Icon(Icons.badge_outlined),
                   ),
                 ),
                 const SizedBox(height: 12),
@@ -171,9 +178,9 @@ class _AddEditCustomerSheetState extends State<AddEditCustomerSheet> {
                   key: const Key('customer_phone_field'),
                   controller: _phoneCtrl,
                   keyboardType: TextInputType.phone,
-                  decoration: const InputDecoration(
-                    labelText: 'Phone Number (Optional)',
-                    prefixIcon: Icon(Icons.phone_outlined),
+                  decoration: InputDecoration(
+                    labelText: isTl ? 'Numero ng Telepono (Opsyonal)' : 'Phone Number (Optional)',
+                    prefixIcon: const Icon(Icons.phone_outlined),
                   ),
                 ),
                 const SizedBox(height: 12),
@@ -181,16 +188,18 @@ class _AddEditCustomerSheetState extends State<AddEditCustomerSheet> {
                   key: const Key('customer_limit_field'),
                   controller: _limitCtrl,
                   keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                  decoration: const InputDecoration(
-                    labelText: 'Credit Limit (₱)',
+                  decoration: InputDecoration(
+                    labelText: isTl ? 'Limit sa Utang (₱)' : 'Credit Limit (₱)',
                     prefixText: '₱ ',
-                    helperText: 'A warning shows in Sell when this is exceeded',
+                    helperText: isTl
+                        ? 'May babala sa Benta kapag lumagpas dito'
+                        : 'A warning shows in Sell when this is exceeded',
                   ),
                   validator: (v) {
                     final t = v?.trim() ?? '';
                     if (t.isEmpty) return null;
-                    if (double.tryParse(t) == null) return 'Enter a valid amount';
-                    if (double.parse(t) < 0) return 'Cannot be negative';
+                    if (double.tryParse(t) == null) return isTl ? 'Maglagay ng wastong halaga' : 'Enter a valid amount';
+                    if (double.parse(t) < 0) return isTl ? 'Hindi maaaring negative' : 'Cannot be negative';
                     return null;
                   },
                 ),
@@ -198,16 +207,20 @@ class _AddEditCustomerSheetState extends State<AddEditCustomerSheet> {
                 TextFormField(
                   controller: _notesCtrl,
                   maxLines: 2,
-                  decoration: const InputDecoration(
-                    labelText: 'Notes (e.g. pays every Friday)',
-                    prefixIcon: Icon(Icons.sticky_note_2_outlined),
+                  decoration: InputDecoration(
+                    labelText: isTl ? 'Tala (hal. nagbabayad tuwing Biyernes)' : 'Notes (e.g. pays every Friday)',
+                    prefixIcon: const Icon(Icons.sticky_note_2_outlined),
                   ),
                 ),
                 const SizedBox(height: 18),
                 ElevatedButton(
                   key: const Key('save_customer_btn'),
                   onPressed: _saving ? null : _save,
-                  child: Text(_isEditing ? 'Save Changes' : 'Save Customer'),
+                  child: Text(
+                    _isEditing
+                        ? (isTl ? 'I-save ang Pagbabago' : 'Save Changes')
+                        : (isTl ? 'I-save ang Suki' : 'Save Customer'),
+                  ),
                 ),
               ],
             ),

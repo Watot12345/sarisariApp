@@ -6,9 +6,15 @@ import '../../../core/localization/language_provider.dart';
 import '../../../core/strings.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/theme/theme_provider.dart';
+import '../../../data/db/app_database.dart';
 import '../../gamification/gamification_provider.dart';
+import '../../home/providers/home_provider.dart';
 import '../../notifications/providers/notification_provider.dart';
 import '../../notifications/widgets/notifications_sheet.dart';
+import '../../products/providers/product_provider.dart';
+import '../../sell/providers/cart_provider.dart';
+import '../../utang/providers/utang_provider.dart';
+import '../../../core/services/update_service.dart';
 
 import '../widgets/home_widget_preview_card.dart';
 
@@ -29,7 +35,190 @@ class SettingsScreen extends StatefulWidget {
 
 class _SettingsScreenState extends State<SettingsScreen> {
   bool _pinLockEnabled = false;
-  final String _storeName = 'Aling Nena Tindahan';
+  String _storeName = 'SariMe Store';
+  bool _checkingUpdate = false;
+  final UpdateService _updateService = UpdateService();
+
+  Future<void> _checkForUpdates(BuildContext context, LanguageProvider lang) async {
+    setState(() => _checkingUpdate = true);
+    try {
+      final result = await _updateService.checkForUpdate();
+      if (!context.mounted) return;
+
+      if (result.isOffline) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(lang.offlineUpdateNotice),
+            backgroundColor: AppTheme.warningOrange,
+          ),
+        );
+        return;
+      }
+
+      if (result.hasUpdate && result.latestRelease != null) {
+        final release = result.latestRelease!;
+        showDialog(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            icon: const Icon(Icons.system_update_rounded, color: AppTheme.primaryGreen, size: 44),
+            title: Text(lang.updateAvailableTitle),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '${lang.tr('Current version', 'Kasalukuyang bersyon')}: v${result.currentVersion}\n${lang.tr('Latest version', 'Bagong bersyon')}: v${release.version}',
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 12),
+                if (release.changelog.isNotEmpty) ...[
+                  Text(
+                    lang.tr('What\'s new:', 'Mga pagbabago:'),
+                    style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+                  ),
+                  const SizedBox(height: 4),
+                  Container(
+                    constraints: const BoxConstraints(maxHeight: 120),
+                    child: SingleChildScrollView(
+                      child: Text(
+                        release.changelog,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Theme.of(ctx).colorScheme.onSurface.withOpacity(0.8),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                ],
+                Text(
+                  lang.tr(
+                    'Download the official APK file directly to install the update.',
+                    'I-download ang bagong APK file upang mai-update ang app.',
+                  ),
+                  style: TextStyle(fontSize: 12, color: Theme.of(ctx).colorScheme.onSurface.withOpacity(0.7)),
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: Text(lang.tr('Later', 'Mamaya')),
+              ),
+              ElevatedButton.icon(
+                icon: const Icon(Icons.download_rounded, size: 18),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppTheme.primaryGreen,
+                  foregroundColor: Colors.white,
+                ),
+                onPressed: () {
+                  Navigator.pop(ctx);
+                  UpdateService.downloadLatestApk(release.downloadUrl);
+                },
+                label: Text(lang.downloadApkNow),
+              ),
+            ],
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('${lang.appUpToDate} (v${AppConstants.appVersion})'),
+            backgroundColor: AppTheme.primaryGreen,
+          ),
+        );
+      }
+    } catch (e) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Update check: $e')),
+      );
+    } finally {
+      if (mounted) setState(() => _checkingUpdate = false);
+    }
+  }
+
+  void _showEditStoreNameDialog(BuildContext context, LanguageProvider lang) {
+    final ctrl = TextEditingController(text: _storeName);
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(lang.tr('Edit Store Name', 'Palitan ang Pangalan ng Tindahan')),
+        content: TextField(
+          controller: ctrl,
+          autofocus: true,
+          decoration: InputDecoration(
+            labelText: lang.tr('Store Name', 'Pangalan ng Tindahan'),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(lang.tr('Cancel', 'Kanselahin')),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              final nextName = ctrl.text.trim();
+              if (nextName.isNotEmpty) {
+                setState(() => _storeName = nextName);
+              }
+              Navigator.pop(ctx);
+            },
+            child: Text(lang.tr('Save', 'I-save')),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _confirmResetAllData(BuildContext context, LanguageProvider lang) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(lang.tr('Reset All Store Data?', 'I-reset ang Lahat ng Data?')),
+        content: Text(
+          lang.tr(
+            'This will permanently clear all products, customer utang ledgers, and sales records so your store starts completely fresh.',
+            'Buburahin nito ang lahat ng paninda, listahan ng utang, at benta upang magsimula nang malinis ang iyong tindahan.',
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(lang.tr('Cancel', 'Kanselahin')),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppTheme.dangerRed,
+              foregroundColor: Colors.white,
+            ),
+            onPressed: () async {
+              Navigator.pop(ctx);
+              await AppDatabase.instance.resetAllData();
+              if (!context.mounted) return;
+              context.read<ProductProvider?>()?.clearAll();
+              context.read<UtangProvider?>()?.clearAll();
+              context.read<CartProvider?>()?.clearCart();
+              context.read<NotificationProvider?>()?.clearAll();
+              await context.read<HomeProvider?>()?.loadDashboard();
+              if (!context.mounted) return;
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(
+                    lang.tr(
+                      'All store data has been reset to a clean slate.',
+                      'Na-reset na ang lahat ng data ng tindahan.',
+                    ),
+                  ),
+                ),
+              );
+            },
+            child: Text(lang.tr('Reset Data', 'I-reset')),
+          ),
+        ],
+      ),
+    );
+  }
 
   String _getThemeName(ThemeMode mode, bool isTl) {
     switch (mode) {
@@ -357,18 +546,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               subtitle: Text(lang.tr('Neighborhood Sari-Sari Store', 'Tindahan sa Barangay')),
               trailing: IconButton(
                 icon: const Icon(Icons.edit_outlined),
-                onPressed: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(
-                        lang.tr(
-                          'Store profile editing will connect soon!',
-                          'Maa-update ang profile ng tindahan sa susunod na release!',
-                        ),
-                      ),
-                    ),
-                  );
-                },
+                onPressed: () => _showEditStoreNameDialog(context, lang),
               ),
             ),
           ),
@@ -520,45 +698,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     NotificationsSheet.show(context);
                   },
                 ),
-                const Divider(height: 1),
-                ListTile(
-                  key: const Key('settings_test_push_tile'),
-                  leading: const Icon(Icons.cell_tower_rounded, color: AppTheme.primaryGreen),
-                  title: Text(lang.tr('Test Push Notification', 'Subukan ang Push Notification')),
-                  subtitle: Text(
-                    lang.tr(
-                      'Send test alert with custom icon to your phone status bar',
-                      'Magpadala ng test alert na may icon sa status bar ng telepono',
-                    ),
-                  ),
-                  trailing: ElevatedButton(
-                    key: const Key('settings_quick_test_notif_btn'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppTheme.primaryGreen,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                      minimumSize: Size.zero,
-                    ),
-                    onPressed: () async {
-                      HapticFeedback.selectionClick();
-                      final notifProv = context.read<NotificationProvider?>();
-                      await notifProv?.sendTestNotification(isTagalog: isTl);
-                      if (context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text(
-                              lang.tr(
-                                'Test push notification dispatched!',
-                                'Naipadala ang test alert sa iyong notification bar!',
-                              ),
-                            ),
-                          ),
-                        );
-                      }
-                    },
-                    child: Text(isTl ? 'I-test' : 'Test'),
-                  ),
-                ),
               ],
             ),
           ),
@@ -621,6 +760,105 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         ),
                       ),
                     );
+                  },
+                ),
+                const Divider(height: 1),
+                ListTile(
+                  key: const Key('settings_reset_all_data_tile'),
+                  leading: const Icon(Icons.delete_forever_rounded, color: AppTheme.dangerRed),
+                  title: Text(
+                    lang.tr('Reset All Store Data', 'I-reset ang Lahat ng Data'),
+                    style: const TextStyle(color: AppTheme.dangerRed, fontWeight: FontWeight.w600),
+                  ),
+                  subtitle: Text(
+                    lang.tr(
+                      'Clear all products, customer utang, and sales history',
+                      'Burahin ang lahat ng paninda, listahan ng utang, at benta',
+                    ),
+                  ),
+                  onTap: () {
+                    HapticFeedback.mediumImpact();
+                    _confirmResetAllData(context, lang);
+                  },
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: AppConstants.space20),
+
+          // App Updates & Download Page (Option 1 + Option 3)
+          Text(
+            lang.updatesSectionTitle,
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.bold,
+              color: theme.colorScheme.onSurface.withOpacity(0.7),
+            ),
+          ),
+          const SizedBox(height: AppConstants.space8),
+          Card(
+            child: Column(
+              children: [
+                ListTile(
+                  key: const Key('settings_check_update_tile'),
+                  leading: const Icon(Icons.system_update_rounded, color: Color(0xFF2563EB)),
+                  title: Text(lang.checkForUpdates),
+                  subtitle: Text(lang.checkUpdatesSubtitle),
+                  trailing: _checkingUpdate
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: theme.colorScheme.primary.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Text(
+                            'v${AppConstants.appVersion}',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                              color: theme.colorScheme.primary,
+                            ),
+                          ),
+                        ),
+                  onTap: _checkingUpdate ? null : () => _checkForUpdates(context, lang),
+                ),
+                const Divider(height: 1),
+                ListTile(
+                  key: const Key('settings_landing_page_tile'),
+                  leading: const Icon(Icons.language_rounded, color: Color(0xFF059669)),
+                  title: Text(lang.visitLandingPage),
+                  subtitle: Text(
+                    lang.tr(
+                      'Download website for other store owners',
+                      'Website para sa pag-download ng ibang tindera',
+                    ),
+                  ),
+                  trailing: const Icon(Icons.open_in_new_rounded, size: 20),
+                  onTap: () {
+                    HapticFeedback.lightImpact();
+                    UpdateService.openLandingPage();
+                  },
+                ),
+                const Divider(height: 1),
+                ListTile(
+                  leading: const Icon(Icons.code_rounded, color: Color(0xFF6B7280)),
+                  title: Text(lang.tr('GitHub Releases', 'GitHub Releases')),
+                  subtitle: Text(
+                    lang.tr(
+                      'Direct APK downloads and release notes',
+                      'Direktang APK download at tala ng release',
+                    ),
+                  ),
+                  trailing: const Icon(Icons.open_in_new_rounded, size: 20),
+                  onTap: () {
+                    HapticFeedback.lightImpact();
+                    UpdateService.openReleasesPage();
                   },
                 ),
               ],

@@ -22,25 +22,15 @@ class ReportsScreen extends StatefulWidget {
 class _ReportsScreenState extends State<ReportsScreen> {
   ReportTimeframe _timeframe = ReportTimeframe.day;
 
-  final List<Map<String, dynamic>> _defaultTopSellers = const [
-    {'name': 'Lucky Me Pancit Canton Kalamansi', 'qty': 42, 'revenueCents': 63000},
-    {'name': 'Coca-Cola Mismo 290ml', 'qty': 38, 'revenueCents': 76000},
-    {'name': 'Marlboro Red (Stick)', 'qty': 35, 'revenueCents': 35000},
-    {'name': 'Kopiko Blanca 3-in-1', 'qty': 29, 'revenueCents': 40600},
-    {'name': 'Piattos Cheese 85g', 'qty': 18, 'revenueCents': 68400},
-  ];
-
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final homeProv = context.watch<HomeProvider>();
     final utangProv = context.watch<UtangProvider>();
     final lang = context.watch<LanguageProvider>();
-    final topSellers = homeProv.topSellers.isNotEmpty
-        ? homeProv.topSellers
-            .map((t) => {'name': t.name, 'qty': t.qty, 'revenueCents': t.revenueCents})
-            .toList()
-        : _defaultTopSellers;
+    final topSellers = homeProv.topSellers
+        .map((t) => {'name': t.name, 'qty': t.qty, 'revenueCents': t.revenueCents})
+        .toList();
 
     return Scaffold(
       appBar: AppBar(
@@ -125,66 +115,82 @@ class _ReportsScreenState extends State<ReportsScreen> {
                   ),
                   const SizedBox(height: AppConstants.space12),
                   const Divider(height: 1),
-                  ...topSellers.asMap().entries.map((entry) {
-                    final rank = entry.key + 1;
-                    final item = entry.value;
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 10),
-                      child: Row(
-                        children: [
-                          Container(
-                            width: 24,
-                            height: 24,
-                            alignment: Alignment.center,
-                            decoration: BoxDecoration(
-                              color: rank == 1
-                                  ? Colors.amber.withOpacity(0.2)
-                                  : theme.colorScheme.surfaceContainerHighest,
-                              shape: BoxShape.circle,
-                            ),
-                            child: Text(
-                              '$rank',
-                              style: TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.bold,
-                                color: rank == 1 ? Colors.amber[900] : null,
+                  if (topSellers.isEmpty)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 20),
+                      child: Center(
+                        child: Text(
+                          lang.isTagalog
+                              ? 'Wala pang naitatalang benta.'
+                              : 'No sales recorded yet.',
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: theme.colorScheme.onSurface.withOpacity(0.6),
+                          ),
+                        ),
+                      ),
+                    )
+                  else
+                    ...topSellers.asMap().entries.map((entry) {
+                      final rank = entry.key + 1;
+                      final item = entry.value;
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 10),
+                        child: Row(
+                          children: [
+                            Container(
+                              width: 24,
+                              height: 24,
+                              alignment: Alignment.center,
+                              decoration: BoxDecoration(
+                                color: rank == 1
+                                    ? Colors.amber.withOpacity(0.2)
+                                    : theme.colorScheme.surfaceContainerHighest,
+                                shape: BoxShape.circle,
+                              ),
+                              child: Text(
+                                '$rank',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.bold,
+                                  color: rank == 1 ? Colors.amber[900] : null,
+                                ),
                               ),
                             ),
-                          ),
-                          const SizedBox(width: AppConstants.space12),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  item['name'] as String,
-                                  style: const TextStyle(
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.bold,
+                            const SizedBox(width: AppConstants.space12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    item['name'] as String,
+                                    style: const TextStyle(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
                                   ),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                                Text(
-                                  lang.isTagalog
-                                      ? '${item['qty']} pirasong naibenta'
-                                      : '${item['qty']} units sold',
-                                  style: TextStyle(
-                                    fontSize: 11,
-                                    color: theme.colorScheme.onSurface.withOpacity(0.6),
+                                  Text(
+                                    lang.isTagalog
+                                        ? '${item['qty']} pirasong naibenta'
+                                        : '${item['qty']} units sold',
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      color: theme.colorScheme.onSurface.withOpacity(0.6),
+                                    ),
                                   ),
-                                ),
-                              ],
+                                ],
+                              ),
                             ),
-                          ),
-                          PriceText(
-                            centavos: item['revenueCents'] as int,
-                            fontSize: 14,
-                          ),
-                        ],
-                      ),
-                    );
-                  }),
+                            PriceText(
+                              centavos: item['revenueCents'] as int,
+                              fontSize: 14,
+                            ),
+                          ],
+                        ),
+                      );
+                    }),
                 ],
               ),
             ),

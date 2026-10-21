@@ -29,7 +29,7 @@ class ProductDetailSheet extends StatelessWidget {
 
   void _showRestockDialog(BuildContext context) {
     int addQty = 10;
-    final isTl = context.read<LanguageProvider?>()?.isTagalog ?? true;
+    final isTl = context.read<LanguageProvider?>()?.isTagalog ?? false;
     final costCtrl = TextEditingController(
       text: product.costCents > 0
           ? (product.costCents / 100.0).toStringAsFixed(2)
@@ -128,7 +128,7 @@ class ProductDetailSheet extends StatelessWidget {
 
   void _showAdjustDialog(BuildContext context) {
     int targetQty = product.stockQty;
-    final isTl = context.read<LanguageProvider?>()?.isTagalog ?? true;
+    final isTl = context.read<LanguageProvider?>()?.isTagalog ?? false;
     String reason = isTl ? 'Recount (Aktwal na bilang)' : 'Recount (Physical Count)';
     final noteCtrl = TextEditingController();
 
@@ -281,7 +281,7 @@ class ProductDetailSheet extends StatelessWidget {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final langProv = context.watch<LanguageProvider?>();
-    final isTl = langProv?.isTagalog ?? true;
+    final isTl = langProv?.isTagalog ?? false;
     final (catColor, catIcon) = AppTheme.getCategoryStyle(product.categoryName);
 
     final profitCents = product.priceCents - product.costCents;
@@ -590,8 +590,8 @@ class ProductDetailSheet extends StatelessWidget {
                     ),
                     onPressed: () => _showRestockDialog(context),
                     icon: const Icon(Icons.add_shopping_cart_rounded, size: 18),
-                    label: const Text('Restock',
-                        style: TextStyle(fontWeight: FontWeight.bold)),
+                    label: Text(isTl ? 'Dagdagan' : 'Restock',
+                        style: const TextStyle(fontWeight: FontWeight.bold)),
                   ),
                 ),
                 const SizedBox(width: 10),

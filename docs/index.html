@@ -1,0 +1,1028 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SariMe - Offline POS & Utang Ledger for Filipino Sari-Sari Stores</title>
+  <meta name="description" content="100% Free, offline-first mobile POS and digital utang credit ledger app designed for Filipino sari-sari store owners. Download APK free.">
+  <link rel="icon" type="image/png" href="app_icon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #059669;
+      --primary-dark: #047857;
+      --primary-light: #ecfdf5;
+      --primary-glow: rgba(5, 150, 105, 0.25);
+      --accent-amber: #f59e0b;
+      --accent-blue: #2563eb;
+      --danger: #ef4444;
+      --bg: #f8fafc;
+      --surface: #ffffff;
+      --surface-border: #e2e8f0;
+      --text-main: #0f172a;
+      --text-muted: #64748b;
+      --radius-sm: 8px;
+      --radius-md: 14px;
+      --radius-lg: 20px;
+      --radius-xl: 28px;
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.05);
+      --shadow-md: 0 4px 20px -2px rgba(15, 23, 42, 0.08);
+      --shadow-lg: 0 12px 32px -4px rgba(5, 150, 105, 0.16);
+      --font-heading: 'Outfit', sans-serif;
+      --font-body: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: var(--font-body);
+      background-color: var(--bg);
+      color: var(--text-main);
+      line-height: 1.6;
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    a {
+      text-decoration: none;
+      color: inherit;
+    }
+
+    /* Container */
+    .container {
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 0 20px;
+    }
+
+    /* Navbar */
+    .navbar {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(255, 255, 255, 0.88);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--surface-border);
+      padding: 14px 0;
+      transition: all 0.2s ease;
+    }
+
+    .nav-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-logo {
+      width: 42px;
+      height: 42px;
+      border-radius: 12px;
+      object-fit: cover;
+      box-shadow: 0 4px 10px rgba(5, 150, 105, 0.25);
+    }
+
+    .brand-text {
+      font-family: var(--font-heading);
+      font-size: 22px;
+      font-weight: 800;
+      color: var(--text-main);
+      letter-spacing: -0.5px;
+    }
+
+    .brand-badge {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      background: var(--primary-light);
+      color: var(--primary-dark);
+      padding: 3px 8px;
+      border-radius: 999px;
+      margin-left: 4px;
+      letter-spacing: 0.5px;
+    }
+
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    /* Lang Toggle */
+    .lang-toggle {
+      display: inline-flex;
+      background: var(--surface-border);
+      border-radius: 999px;
+      padding: 3px;
+      border: 1px solid #cbd5e1;
+    }
+
+    .lang-btn {
+      border: none;
+      background: transparent;
+      padding: 5px 12px;
+      font-size: 12px;
+      font-weight: 600;
+      border-radius: 999px;
+      cursor: pointer;
+      color: var(--text-muted);
+      transition: all 0.2s ease;
+    }
+
+    .lang-btn.active {
+      background: var(--surface);
+      color: var(--primary);
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+
+    .nav-cta {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--primary);
+      color: #fff;
+      font-size: 13px;
+      font-weight: 600;
+      padding: 8px 16px;
+      border-radius: 999px;
+      transition: background 0.2s ease, transform 0.15s ease;
+    }
+
+    .nav-cta:hover {
+      background: var(--primary-dark);
+      transform: translateY(-1px);
+    }
+
+    /* Hero Section */
+    .hero {
+      padding: 60px 0 50px;
+      text-align: center;
+      background: radial-gradient(circle at 50% 10%, rgba(16, 185, 129, 0.12) 0%, transparent 70%);
+    }
+
+    .pill-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--primary-light);
+      color: var(--primary-dark);
+      border: 1px solid rgba(5, 150, 105, 0.2);
+      padding: 6px 14px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 24px;
+      animation: fadeInDown 0.6s ease;
+    }
+
+    .hero-title {
+      font-family: var(--font-heading);
+      font-size: clamp(32px, 5.5vw, 56px);
+      font-weight: 800;
+      line-height: 1.15;
+      letter-spacing: -1px;
+      color: var(--text-main);
+      max-width: 860px;
+      margin: 0 auto 20px;
+    }
+
+    .hero-title .gradient-text {
+      background: linear-gradient(135deg, var(--primary) 0%, #10b981 50%, var(--accent-amber) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .hero-subtitle {
+      font-size: clamp(16px, 2.2vw, 20px);
+      color: var(--text-muted);
+      max-width: 680px;
+      margin: 0 auto 36px;
+      font-weight: 400;
+    }
+
+    .cta-group {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+
+    .btn-download-primary {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      background: linear-gradient(135deg, #059669 0%, #047857 100%);
+      color: #fff;
+      font-family: var(--font-heading);
+      font-size: 18px;
+      font-weight: 700;
+      padding: 16px 32px;
+      border-radius: var(--radius-xl);
+      box-shadow: var(--shadow-lg);
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      border: none;
+      cursor: pointer;
+    }
+
+    .btn-download-primary:hover {
+      transform: translateY(-2px) scale(1.02);
+      box-shadow: 0 16px 36px -4px rgba(5, 150, 105, 0.35);
+    }
+
+    .btn-secondary {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--surface);
+      color: var(--text-main);
+      border: 1px solid var(--surface-border);
+      font-size: 15px;
+      font-weight: 600;
+      padding: 16px 24px;
+      border-radius: var(--radius-xl);
+      box-shadow: var(--shadow-sm);
+      transition: all 0.2s ease;
+    }
+
+    .btn-secondary:hover {
+      background: #f1f5f9;
+      border-color: #cbd5e1;
+      transform: translateY(-1px);
+    }
+
+    .apk-meta {
+      font-size: 12px;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    /* Trust Highlights Bar */
+    .trust-bar {
+      margin: 40px auto 60px;
+      background: var(--surface);
+      border: 1px solid var(--surface-border);
+      border-radius: var(--radius-lg);
+      padding: 20px 24px;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 20px;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .trust-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .trust-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      background: var(--primary-light);
+      color: var(--primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      flex-shrink: 0;
+    }
+
+    .trust-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text-main);
+    }
+
+    .trust-desc {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    /* Section Headers */
+    .section-header {
+      text-align: center;
+      margin-bottom: 48px;
+    }
+
+    .section-tag {
+      font-family: var(--font-heading);
+      font-size: 13px;
+      font-weight: 700;
+      text-transform: uppercase;
+      color: var(--primary);
+      letter-spacing: 1px;
+      margin-bottom: 8px;
+    }
+
+    .section-title {
+      font-family: var(--font-heading);
+      font-size: clamp(26px, 3.5vw, 38px);
+      font-weight: 800;
+      color: var(--text-main);
+      letter-spacing: -0.5px;
+      margin-bottom: 12px;
+    }
+
+    .section-subtitle {
+      font-size: 16px;
+      color: var(--text-muted);
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    /* Feature Cards */
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 24px;
+      margin-bottom: 80px;
+    }
+
+    .feature-card {
+      background: var(--surface);
+      border: 1px solid var(--surface-border);
+      border-radius: var(--radius-lg);
+      padding: 32px 28px;
+      box-shadow: var(--shadow-sm);
+      transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+      position: relative;
+    }
+
+    .feature-card:hover {
+      transform: translateY(-4px);
+      box-shadow: var(--shadow-md);
+      border-color: rgba(5, 150, 105, 0.4);
+    }
+
+    .feature-icon-wrapper {
+      width: 52px;
+      height: 52px;
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 26px;
+      margin-bottom: 20px;
+    }
+
+    .icon-emerald { background: #d1fae5; color: #059669; }
+    .icon-amber { background: #fef3c7; color: #d97706; }
+    .icon-blue { background: #dbeafe; color: #2563eb; }
+    .icon-purple { background: #ede9fe; color: #7c3aed; }
+    .icon-rose { background: #ffe4e6; color: #e11d48; }
+    .icon-indigo { background: #e0e7ff; color: #4338ca; }
+
+    .feature-title {
+      font-family: var(--font-heading);
+      font-size: 20px;
+      font-weight: 700;
+      margin-bottom: 10px;
+      color: var(--text-main);
+    }
+
+    .feature-desc {
+      font-size: 14px;
+      color: var(--text-muted);
+      line-height: 1.6;
+    }
+
+    /* Install Guide */
+    .guide-section {
+      background: linear-gradient(180deg, #ffffff 0%, #f1f5f9 100%);
+      border-top: 1px solid var(--surface-border);
+      border-bottom: 1px solid var(--surface-border);
+      padding: 70px 0;
+      margin-bottom: 80px;
+    }
+
+    .steps-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 20px;
+      margin-top: 40px;
+    }
+
+    .step-card {
+      background: var(--surface);
+      border: 1px solid var(--surface-border);
+      border-radius: var(--radius-md);
+      padding: 28px 24px;
+      position: relative;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .step-num {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: var(--primary);
+      color: #fff;
+      font-family: var(--font-heading);
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      margin-bottom: 16px;
+    }
+
+    .step-title {
+      font-family: var(--font-heading);
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .step-desc {
+      font-size: 13px;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+
+    /* FAQ */
+    .faq-grid {
+      max-width: 780px;
+      margin: 0 auto 80px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .faq-item {
+      background: var(--surface);
+      border: 1px solid var(--surface-border);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      transition: all 0.2s ease;
+    }
+
+    .faq-question {
+      padding: 20px 24px;
+      font-weight: 700;
+      font-size: 16px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      user-select: none;
+    }
+
+    .faq-question::after {
+      content: '+';
+      font-size: 20px;
+      font-weight: 400;
+      color: var(--text-muted);
+      transition: transform 0.2s ease;
+    }
+
+    .faq-item.open .faq-question::after {
+      content: '−';
+      color: var(--primary);
+    }
+
+    .faq-answer {
+      display: none;
+      padding: 0 24px 20px;
+      font-size: 14px;
+      color: var(--text-muted);
+      line-height: 1.6;
+    }
+
+    .faq-item.open .faq-answer {
+      display: block;
+    }
+
+    /* Call to Action Banner */
+    .cta-banner {
+      background: linear-gradient(135deg, #064e3b 0%, #059669 100%);
+      color: #fff;
+      border-radius: var(--radius-xl);
+      padding: 56px 32px;
+      text-align: center;
+      margin-bottom: 80px;
+      box-shadow: var(--shadow-lg);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .cta-banner h2 {
+      font-family: var(--font-heading);
+      font-size: clamp(28px, 4vw, 42px);
+      font-weight: 800;
+      margin-bottom: 14px;
+    }
+
+    .cta-banner p {
+      font-size: 16px;
+      color: rgba(255, 255, 255, 0.9);
+      max-width: 600px;
+      margin: 0 auto 28px;
+    }
+
+    .btn-download-white {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      background: #fff;
+      color: #064e3b;
+      font-family: var(--font-heading);
+      font-size: 17px;
+      font-weight: 800;
+      padding: 16px 36px;
+      border-radius: 999px;
+      box-shadow: 0 10px 24px rgba(0,0,0,0.2);
+      transition: all 0.2s ease;
+    }
+
+    .btn-download-white:hover {
+      transform: translateY(-2px);
+      background: #f8fafc;
+    }
+
+    /* Footer */
+    footer {
+      border-top: 1px solid var(--surface-border);
+      padding: 40px 0;
+      background: var(--surface);
+      text-align: center;
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    .footer-links {
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+
+    .footer-links a:hover {
+      color: var(--primary);
+    }
+
+    /* Animations */
+    @keyframes fadeInDown {
+      from {
+        opacity: 0;
+        transform: translateY(-12px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* Responsive */
+    @media (max-width: 640px) {
+      .navbar {
+        padding: 10px 0;
+      }
+      .brand-text {
+        font-size: 18px;
+      }
+      .brand-badge {
+        display: none;
+      }
+      .nav-cta {
+        display: none;
+      }
+      .hero {
+        padding: 40px 0 30px;
+      }
+      .btn-download-primary {
+        width: 100%;
+      }
+      .btn-secondary {
+        width: 100%;
+        justify-content: center;
+      }
+      .trust-bar {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Navigation -->
+  <nav class="navbar">
+    <div class="container nav-inner">
+      <div class="brand">
+        <img src="app_icon.png" alt="SariMe App Icon" class="brand-logo" onerror="this.style.display='none'">
+        <span class="brand-text">SariMe</span>
+        <span class="brand-badge">Offline POS</span>
+      </div>
+
+      <div class="nav-actions">
+        <!-- Bilingual Language Switcher -->
+        <div class="lang-toggle" role="group" aria-label="Language switcher">
+          <button type="button" class="lang-btn active" id="lang-en" onclick="setLanguage('en')">EN</button>
+          <button type="button" class="lang-btn" id="lang-tl" onclick="setLanguage('tl')">Tagalog</button>
+        </div>
+
+        <a href="https://github.com/Watot12345/sarisariApp/releases/latest/download/app-release.apk" class="nav-cta">
+          <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+          <span data-i18n="nav_download">Get APK</span>
+        </a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Hero Section -->
+  <header class="hero">
+    <div class="container">
+      <div class="pill-badge">
+        <span>🇵🇭</span>
+        <span data-i18n="hero_pill">100% Free • Open-Source • Walang Internet Needed</span>
+      </div>
+
+      <h1 class="hero-title" data-i18n="hero_title">
+        The Smart Offline POS & Utang Ledger for <span class="gradient-text">Filipino Sari-Sari Stores</span>
+      </h1>
+
+      <p class="hero-subtitle" data-i18n="hero_subtitle">
+        Scan barcodes, record fast sales, manage customer credit books, and track daily profits with zero internet and zero monthly fees.
+      </p>
+
+      <div class="cta-group">
+        <a href="https://github.com/Watot12345/sarisariApp/releases/latest/download/app-release.apk" class="btn-download-primary" id="btn-hero-download">
+          <svg width="24" height="24" fill="currentColor" viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+          <span data-i18n="btn_download">Download Free Android APK</span>
+        </a>
+
+        <a href="#install-guide" class="btn-secondary">
+          <span data-i18n="btn_guide">Installation Guide</span>
+        </a>
+
+        <a href="https://github.com/Watot12345/sarisariApp" target="_blank" rel="noopener noreferrer" class="btn-secondary">
+          <svg width="18" height="18" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+          <span>GitHub</span>
+        </a>
+      </div>
+
+      <div class="apk-meta">
+        <span>✓ <strong data-i18n="meta_version">Latest Version: v1.0.0</strong></span>
+        <span>✓ <strong data-i18n="meta_android">Requires Android 8.0+</strong></span>
+        <span>✓ <strong data-i18n="meta_size">Size: ~25 MB</strong></span>
+        <span>✓ <strong data-i18n="meta_price">100% Libre / No Subscriptions</strong></span>
+      </div>
+
+      <!-- Trust Bar -->
+      <div class="trust-bar">
+        <div class="trust-item">
+          <div class="trust-icon">⚡</div>
+          <div>
+            <div class="trust-title" data-i18n="trust_1_title">100% Offline</div>
+            <div class="trust-desc" data-i18n="trust_1_desc">Zero internet or mobile data needed</div>
+          </div>
+        </div>
+        <div class="trust-item">
+          <div class="trust-icon">🔒</div>
+          <div>
+            <div class="trust-title" data-i18n="trust_2_title">Private & Secure</div>
+            <div class="trust-desc" data-i18n="trust_2_desc">All records stay strictly on your phone</div>
+          </div>
+        </div>
+        <div class="trust-item">
+          <div class="trust-icon">🇵🇭</div>
+          <div>
+            <div class="trust-title" data-i18n="trust_3_title">Para sa Tindahan</div>
+            <div class="trust-desc" data-i18n="trust_3_desc">Built specifically for Filipino culture</div>
+          </div>
+        </div>
+        <div class="trust-item">
+          <div class="trust-icon">🎁</div>
+          <div>
+            <div class="trust-title" data-i18n="trust_4_title">Libre Habangbuhay</div>
+            <div class="trust-desc" data-i18n="trust_4_desc">No ads, no monthly fees, no hidden costs</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Features Grid -->
+  <main class="container">
+    <section class="section-header">
+      <div class="section-tag" data-i18n="feat_tag">Mga Feature ng SariMe</div>
+      <h2 class="section-title" data-i18n="feat_heading">Everything Your Sari-Sari Store Needs</h2>
+      <p class="section-subtitle" data-i18n="feat_sub">Built to replace old notebooks, manual calculators, and lost utang records.</p>
+    </section>
+
+    <div class="features-grid">
+      <!-- Feature 1 -->
+      <div class="feature-card">
+        <div class="feature-icon-wrapper icon-emerald">🛒</div>
+        <h3 class="feature-title" data-i18n="feat_1_title">Fast POS & Barcode Scanner</h3>
+        <p class="feature-desc" data-i18n="feat_1_desc">Point your phone camera to scan barcodes instantly on instant noodles, chips, and drinks, or tap quick-cash buttons for lightning-fast checkout.</p>
+      </div>
+
+      <!-- Feature 2 -->
+      <div class="feature-card">
+        <div class="feature-icon-wrapper icon-amber">📒</div>
+        <h3 class="feature-title" data-i18n="feat_2_title">Digital Utang Credit Ledger</h3>
+        <p class="feature-desc" data-i18n="feat_2_desc">Say goodbye to torn paper notebooks! Keep accurate customer credit balances, record partial payments (hulog), and see who owes what at a single glance.</p>
+      </div>
+
+      <!-- Feature 3 -->
+      <div class="feature-card">
+        <div class="feature-icon-wrapper icon-blue">📈</div>
+        <h3 class="feature-title" data-i18n="feat_3_title">Daily Kita & Sales Goals</h3>
+        <p class="feature-desc" data-i18n="feat_3_desc">See exactly how much revenue and net profit you earned today. Level up your store from 'Starter Storekeeper' to 'Sari-Sari Legend' as you hit sales goals!</p>
+      </div>
+
+      <!-- Feature 4 -->
+      <div class="feature-card">
+        <div class="feature-icon-wrapper icon-purple">🔐</div>
+        <h3 class="feature-title" data-i18n="feat_4_title">Owner PIN Lock Protection</h3>
+        <p class="feature-desc" data-i18n="feat_4_desc">Let family members or store bantay ring up sales without exposing your supplier cost prices or total daily profit. Your profit margins stay 100% confidential.</p>
+      </div>
+
+      <!-- Feature 5 -->
+      <div class="feature-card">
+        <div class="feature-icon-wrapper icon-rose">📱</div>
+        <h3 class="feature-title" data-i18n="feat_5_title">Android Home Screen Widget</h3>
+        <p class="feature-desc" data-i18n="feat_5_desc">Glance at your current day sales, target goal progress, and top-selling items right on your Android phone home screen without needing to launch the app.</p>
+      </div>
+
+      <!-- Feature 6 -->
+      <div class="feature-card">
+        <div class="feature-icon-wrapper icon-indigo">🗣️</div>
+        <h3 class="feature-title" data-i18n="feat_6_title">Tagalog & English Bilingual</h3>
+        <p class="feature-desc" data-i18n="feat_6_desc">Switch seamlessly between conversational Tagalog and English across every screen, button, and report. Built comfortably for local store owners.</p>
+      </div>
+    </div>
+  </main>
+
+  <!-- Install Guide Section -->
+  <section class="guide-section" id="install-guide">
+    <div class="container">
+      <div class="section-header">
+        <div class="section-tag" data-i18n="guide_tag">Madaling I-install</div>
+        <h2 class="section-title" data-i18n="guide_heading">How to Install SariMe on Android</h2>
+        <p class="section-subtitle" data-i18n="guide_sub">Since SariMe is 100% free and open-source, you can install the APK directly without needing a Google Play account.</p>
+      </div>
+
+      <div class="steps-grid">
+        <div class="step-card">
+          <div class="step-num">1</div>
+          <h3 class="step-title" data-i18n="step_1_title">Download APK</h3>
+          <p class="step-desc" data-i18n="step_1_desc">Tap the 'Download Free Android APK' button on this page. Your browser (Chrome) will begin downloading the app-release.apk file.</p>
+        </div>
+
+        <div class="step-card">
+          <div class="step-num">2</div>
+          <h3 class="step-title" data-i18n="step_2_title">Open File</h3>
+          <p class="step-desc" data-i18n="step_2_desc">Once downloaded, pull down your notification tray or go to your phone's 'Downloads' folder and tap the downloaded file.</p>
+        </div>
+
+        <div class="step-card">
+          <div class="step-num">3</div>
+          <h3 class="step-title" data-i18n="step_3_title">Allow Unknown Apps</h3>
+          <p class="step-desc" data-i18n="step_3_desc">If Android shows a security prompt ('For your security, your phone is not allowed to install unknown apps'), tap 'Settings' and toggle 'Allow from this source'.</p>
+        </div>
+
+        <div class="step-card">
+          <div class="step-num">4</div>
+          <h3 class="step-title" data-i18n="step_4_title">Tap Install & Open</h3>
+          <p class="step-desc" data-i18n="step_4_desc">Tap 'Install'. In just a few seconds, SariMe will be installed on your phone. Open it and start managing your store offline!</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FAQ Section -->
+  <section class="container">
+    <div class="section-header">
+      <div class="section-tag" data-i18n="faq_tag">Mga Madalas Itanong</div>
+      <h2 class="section-title" data-i18n="faq_heading">Frequently Asked Questions</h2>
+    </div>
+
+    <div class="faq-grid">
+      <div class="faq-item">
+        <div class="faq-question" data-i18n="faq_1_q">Kailangan ba ng internet para magamit ang SariMe?</div>
+        <div class="faq-answer" data-i18n="faq_1_a">Hindi! Ang SariMe ay 100% offline-first. Ang pagbebenta, pag-scan ng barcode gamit ang camera, paglilista ng utang, at mga ulat ng kita ay gumagana kahit walang internet, Wi-Fi, o mobile data.</div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-question" data-i18n="faq_2_q">Libre ba talaga ito? May bayad ba bawat buwan?</div>
+        <div class="faq-answer" data-i18n="faq_2_a">Walang anumang bayad! 100% libre ang SariMe, walang subscription, walang ads, at bukas ang source code sa GitHub para sa komunidad ng mga magtitindang Pilipino.</div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-question" data-i18n="faq_3_q">Paano ako makakakuha ng mga bagong update sa hinaharap?</div>
+        <div class="faq-answer" data-i18n="faq_3_a">Napakadali! Sa loob ng SariMe, pumunta sa 'Settings' at pindutin ang 'Check for Updates'. O kaya ay bisitahin muli ang website na ito para i-download ang bagong APK.</div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-question" data-i18n="faq_4_q">Mawawala ba ang aking mga paninda at listahan ng utang kapag nag-update ako?</div>
+        <div class="faq-answer" data-i18n="faq_4_a">Hindi! Naka-save ang iyong SQLite database sa protektadong storage ng iyong telepono. Kapag nag-install ka ng bagong APK update, mananatiling buo at kumpleto ang lahat ng iyong paninda, benta, at utang records.</div>
+      </div>
+    </div>
+
+    <!-- Final CTA Banner -->
+    <div class="cta-banner">
+      <h2 data-i18n="banner_title">Ready to modernize your sari-sari store?</h2>
+      <p data-i18n="banner_sub">Download the free APK now and start managing sales and utang like a pro.</p>
+      <a href="https://github.com/Watot12345/sarisariApp/releases/latest/download/app-release.apk" class="btn-download-white">
+        <svg width="22" height="22" fill="currentColor" viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+        <span data-i18n="banner_btn">I-download ang SariMe APK (Libre)</span>
+      </a>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer>
+    <div class="container">
+      <div class="footer-links">
+        <a href="https://github.com/Watot12345/sarisariApp" target="_blank" rel="noopener noreferrer">GitHub Repository</a>
+        <span>•</span>
+        <a href="https://github.com/Watot12345/sarisariApp/releases" target="_blank" rel="noopener noreferrer">All Releases</a>
+        <span>•</span>
+        <a href="#install-guide" data-i18n="footer_guide">Install Guide</a>
+        <span>•</span>
+        <a href="privacy.html">Privacy Policy &amp; Terms</a>
+      </div>
+      <p data-i18n="footer_copy">© 2026 SariMe — Gawa nang may pagmamahal para sa mga Tindahang Pinoy.</p>
+    </div>
+  </footer>
+
+  <!-- Script for Bilingual Support & Interactivity -->
+  <script>
+    const translations = {
+      en: {
+        nav_download: "Get APK",
+        hero_pill: "100% Free • Open-Source • Zero Internet Required",
+        hero_title: 'The Smart Offline POS & Utang Ledger for <span class="gradient-text">Filipino Sari-Sari Stores</span>',
+        hero_subtitle: "Scan barcodes, record fast sales, manage customer credit books, and track daily profits with zero internet and zero monthly fees.",
+        btn_download: "Download Free Android APK",
+        btn_guide: "Installation Guide",
+        meta_version: "Latest Version: v1.0.0",
+        meta_android: "Requires Android 8.0+",
+        meta_size: "Size: ~25 MB",
+        meta_price: "100% Free / No Subscriptions",
+        trust_1_title: "100% Offline",
+        trust_1_desc: "Zero internet or mobile data needed",
+        trust_2_title: "Private & Secure",
+        trust_2_desc: "All records stay strictly on your phone",
+        trust_3_title: "Made for Sari-Sari Stores",
+        trust_3_desc: "Built specifically for Filipino culture",
+        trust_4_title: "Free Forever",
+        trust_4_desc: "No ads, no monthly fees, no hidden costs",
+        feat_tag: "SariMe Features",
+        feat_heading: "Everything Your Sari-Sari Store Needs",
+        feat_sub: "Built to replace old notebooks, manual calculators, and lost utang records.",
+        feat_1_title: "Fast POS & Barcode Scanner",
+        feat_1_desc: "Point your phone camera to scan barcodes instantly on instant noodles, chips, and drinks, or tap quick-cash buttons for lightning-fast checkout.",
+        feat_2_title: "Digital Utang Credit Ledger",
+        feat_2_desc: "Say goodbye to torn paper notebooks! Keep accurate customer credit balances, record partial payments (hulog), and see who owes what at a single glance.",
+        feat_3_title: "Daily Profit & Sales Goals",
+        feat_3_desc: "See exactly how much revenue and net profit you earned today. Level up your store from 'Starter Storekeeper' to 'Sari-Sari Legend' as you hit sales goals!",
+        feat_4_title: "Owner PIN Lock Protection",
+        feat_4_desc: "Let family members or store bantay ring up sales without exposing your supplier cost prices or total daily profit. Your profit margins stay 100% confidential.",
+        feat_5_title: "Android Home Screen Widget",
+        feat_5_desc: "Glance at your current day sales, target goal progress, and top-selling items right on your Android phone home screen without needing to launch the app.",
+        feat_6_title: "Tagalog & English Bilingual",
+        feat_6_desc: "Switch seamlessly between conversational Tagalog and English across every screen, button, and report. Built comfortably for local store owners.",
+        guide_tag: "Easy Installation",
+        guide_heading: "How to Install SariMe on Android",
+        guide_sub: "Since SariMe is 100% free and open-source, you can install the APK directly without needing a Google Play account.",
+        step_1_title: "Download APK",
+        step_1_desc: "Tap the 'Download Free Android APK' button on this page. Your browser (Chrome) will begin downloading the app-release.apk file.",
+        step_2_title: "Open File",
+        step_2_desc: "Once downloaded, pull down your notification tray or go to your phone's 'Downloads' folder and tap the downloaded file.",
+        step_3_title: "Allow Unknown Apps",
+        step_3_desc: "If Android shows a security prompt ('For your security, your phone is not allowed to install unknown apps'), tap 'Settings' and toggle 'Allow from this source'.",
+        step_4_title: "Tap Install & Open",
+        step_4_desc: "Tap 'Install'. In just a few seconds, SariMe will be installed on your phone. Open it and start managing your store offline!",
+        faq_tag: "FAQ",
+        faq_heading: "Frequently Asked Questions",
+        faq_1_q: "Do I need an internet connection to use SariMe?",
+        faq_1_a: "No! SariMe is 100% offline-first. Selling, barcode scanning with the camera, utang tracking, and financial reports work without any internet or mobile data.",
+        faq_2_q: "Is it really free? Are there any monthly subscriptions?",
+        faq_2_a: "Zero fees! SariMe is 100% free forever, has no ads, no monthly charges, and is open-source on GitHub for the Filipino community.",
+        faq_3_q: "How do I receive new updates in the future?",
+        faq_3_a: "Very easy! Inside SariMe, tap Settings > 'Check for Updates'. You can also return to this website anytime to download the latest APK.",
+        faq_4_q: "Will updating delete my products and utang records?",
+        faq_4_a: "No! Your database is stored safely in your phone's persistent storage. Updating the APK keeps all your inventory, sales, and utang records 100% safe.",
+        banner_title: "Ready to modernize your sari-sari store?",
+        banner_sub: "Download the free APK now and start managing sales and utang like a pro.",
+        banner_btn: "Download Free Android APK",
+        footer_guide: "Install Guide",
+        footer_copy: "© 2026 SariMe — Crafted with care for Filipino Sari-Sari Stores."
+      },
+      tl: {
+        nav_download: "Kunin ang APK",
+        hero_pill: "100% Libre • Open-Source • Walang Internet Needed",
+        hero_title: 'Ang Matalinong POS at Utang Ledger ng <span class="gradient-text">Tindahang Pinoy</span>',
+        hero_subtitle: "Mag-scan ng barcode gamit ang cellphone, magtala ng benta, maglista ng pautang, at alamin ang tunay na kita—walang internet, walang bayad bawat buwan.",
+        btn_download: "I-download ang Libreng Android APK",
+        btn_guide: "Gabay sa Pag-install",
+        meta_version: "Bersyon: v1.0.0",
+        meta_android: "Kailangan ng Android 8.0 pataas",
+        meta_size: "Laki: ~25 MB",
+        meta_price: "100% Libre / Walang Subscription",
+        trust_1_title: "100% Offline",
+        trust_1_desc: "Kahit walang Wi-Fi o mobile data",
+        trust_2_title: "Ligtas at Pribado",
+        trust_2_desc: "Nasa telepono mo lang ang lahat ng data",
+        trust_3_title: "Para sa Tindahan",
+        trust_3_desc: "Akma sa kultura ng sari-sari store sa Pilipinas",
+        trust_4_title: "Libre Habangbuhay",
+        trust_4_desc: "Walang ads at walang bayad bawat buwan",
+        feat_tag: "Mga Tampok ng SariMe",
+        feat_heading: "Lahat ng Kailangan ng Iyong Tindahan",
+        feat_sub: "Pamalit sa lumang notebook, manu-manong kalkyu, at nawawalang listahan ng pautang.",
+        feat_1_title: "Mabilis na POS & Barcode Scanner",
+        feat_1_desc: "Itutok ang camera sa barcode ng noodles, chichirya, o kape, o pindutin ang quick-cash buttons para sa mabilisang sukli.",
+        feat_2_title: "Digital na Talaan ng Utang",
+        feat_2_desc: "Wala nang punit o nawawalang pahina! Madaling hanapin ang pangalan ng suki, magtala ng hulog, at makita ang kabuuang pautang.",
+        feat_3_title: "Araw-araw na Kita at Target",
+        feat_3_desc: "Alamin ang totoong kinita sa bawat araw. Mag-level up mula 'Baguhang Tindera' hanggang 'Alamat ng Sari-Sari' habang umaangat ang benta!",
+        feat_4_title: "Proteksyon ng Owner PIN Lock",
+        feat_4_desc: "Pahintulutan ang bantay o kapamilya na magbenta nang hindi nakikita ang iyong puhunan o kabuuang kita. Ligtas ang iyong profit margins.",
+        feat_5_title: "Android Home Screen Widget",
+        feat_5_desc: "Tingnan ang iyong benta ngayong araw at goal progress sa home screen ng iyong telepono nang hindi na kailangang buksan ang app.",
+        feat_6_title: "Bilingual: Tagalog at English",
+        feat_6_desc: "Isang pindot lang, lilipat ang buong app sa Tagalog o English. Komportable at madaling maintindihan ninoman.",
+        guide_tag: "Madaling I-install",
+        guide_heading: "Paano I-install ang SariMe sa Android",
+        guide_sub: "Dahil 100% libre at open-source ang SariMe, mai-install mo agad ang APK nang hindi kailangan ng Google Play account.",
+        step_1_title: "I-download ang APK",
+        step_1_desc: "Pindutin ang 'I-download ang Libreng Android APK' button sa itaas. Sisimulan ng Chrome ang pag-download ng app-release.apk file.",
+        step_2_title: "Buksan ang File",
+        step_2_desc: "Kapag tapos na ang download, i-pull down ang notifications o pumunta sa 'Downloads' folder ng cellphone at i-tap ang file.",
+        step_3_title: "Pahintulutan ang Unknown Apps",
+        step_3_desc: "Kung magpakita ng babala ang Android ('For your security...'), i-tap ang 'Settings' at i-on ang 'Allow from this source'.",
+        step_4_title: "I-tap ang Install at Magsimula",
+        step_4_desc: "Pindutin ang 'Install'. Sa loob ng ilang segundo, handa na ang SariMe. Buksan ito at magsimulang magtala nang maayos!",
+        faq_tag: "Mga Madalas Itanong",
+        faq_heading: "Frequently Asked Questions",
+        faq_1_q: "Kailangan ba ng internet para magamit ang SariMe?",
+        faq_1_a: "Hindi! Ang SariMe ay 100% offline-first. Ang pagbebenta, pag-scan ng barcode gamit ang camera, paglilista ng utang, at mga ulat ng kita ay gumagana kahit walang internet, Wi-Fi, o mobile data.",
+        faq_2_q: "Libre ba talaga ito? May bayad ba bawat buwan?",
+        faq_2_a: "Walang anumang bayad! 100% libre ang SariMe, walang subscription, walang ads, at bukas ang source code sa GitHub para sa komunidad ng mga magtitindang Pilipino.",
+        faq_3_q: "Paano ako makakakuha ng mga bagong update sa hinaharap?",
+        faq_3_a: "Napakadali! Sa loob ng SariMe, pumunta sa 'Settings' at pindutin ang 'Check for Updates'. O kaya ay bisitahin muli ang website na ito para i-download ang bagong APK.",
+        faq_4_q: "Mawawala ba ang aking mga paninda at listahan ng utang kapag nag-update ako?",
+        faq_4_a: "Hindi! Naka-save ang iyong SQLite database sa protektadong storage ng iyong telepono. Kapag nag-install ka ng bagong APK update, mananatiling buo at kumpleto ang lahat ng iyong paninda, benta, at utang records.",
+        banner_title: "Handa ka na bang i-upgrade ang iyong tindahan?",
+        banner_sub: "I-download ang libreng APK ngayon at magtala ng benta at utang nang mas mabilis at organisado.",
+        banner_btn: "I-download ang SariMe APK (Libre)",
+        footer_guide: "Gabay sa Pag-install",
+        footer_copy: "© 2026 SariMe — Gawa nang may pagmamahal para sa mga Tindahang Pinoy."
+      }
+    };
+
+    function setLanguage(lang) {
+      document.getElementById('lang-en').classList.toggle('active', lang === 'en');
+      document.getElementById('lang-tl').classList.toggle('active', lang === 'tl');
+      document.documentElement.lang = lang;
+
+      const dict = translations[lang];
+      document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.getAttribute('data-i18n');
+        if (dict[key]) {
+          el.innerHTML = dict[key];
+        }
+      });
+      localStorage.setItem('sarime_lang', lang);
+    }
+
+    // FAQ Accordion toggle
+    document.querySelectorAll('.faq-item').forEach(item => {
+      item.querySelector('.faq-question').addEventListener('click', () => {
+        const isOpen = item.classList.contains('open');
+        document.querySelectorAll('.faq-item').forEach(f => f.classList.remove('open'));
+        if (!isOpen) {
+          item.classList.add('open');
+        }
+      });
+    });
+
+    // Initialize default language
+    const savedLang = localStorage.getItem('sarime_lang') || 'en';
+    setLanguage(savedLang);
+  </script>
+</body>
+</html>

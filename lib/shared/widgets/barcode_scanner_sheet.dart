@@ -3,7 +3,9 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
+import 'package:provider/provider.dart';
 import '../../core/constants.dart';
+import '../../core/localization/language_provider.dart';
 import '../../core/strings.dart';
 import '../../core/theme/app_theme.dart';
 
@@ -79,8 +81,9 @@ class _BarcodeScannerSheetState extends State<BarcodeScannerSheet> {
     if (_hasPopped) return;
     final clean = rawCode.trim();
     if (clean.isEmpty) {
+      final isTl = context.read<LanguageProvider?>()?.isTagalog ?? false;
       setState(() {
-        _inputError = 'Please enter or scan a valid barcode';
+        _inputError = isTl ? 'Mangyaring maglagay o mag-scan ng wastong barcode' : 'Please enter or scan a valid barcode';
       });
       return;
     }
@@ -93,6 +96,8 @@ class _BarcodeScannerSheetState extends State<BarcodeScannerSheet> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
+    final langProv = context.watch<LanguageProvider?>();
+    final isTl = langProv?.isTagalog ?? false;
 
     return Container(
       padding: EdgeInsets.only(
@@ -140,7 +145,9 @@ class _BarcodeScannerSheetState extends State<BarcodeScannerSheet> {
                   ),
                   IconButton(
                     key: const Key('scanner_torch_toggle_btn'),
-                    tooltip: _isTorchOn ? 'Turn Off Flashlight' : 'Turn On Flashlight',
+                    tooltip: _isTorchOn
+                        ? (isTl ? 'Patayin ang Flashlight' : 'Turn Off Flashlight')
+                        : (isTl ? 'Buksan ang Flashlight' : 'Turn On Flashlight'),
                     icon: Icon(
                       _isTorchOn ? Icons.flash_on_rounded : Icons.flash_off_rounded,
                       color: _isTorchOn ? AppTheme.accentAmber : null,
@@ -175,6 +182,39 @@ class _BarcodeScannerSheetState extends State<BarcodeScannerSheet> {
                     if (_supportsLiveCamera && _scannerController != null)
                       MobileScanner(
                         controller: _scannerController!,
+                        errorBuilder: (context, error, child) {
+                          return Center(
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 16),
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const Icon(
+                                    Icons.no_photography_rounded,
+                                    color: Colors.orangeAccent,
+                                    size: 40,
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    error.errorCode == MobileScannerErrorCode.permissionDenied
+                                        ? (isTl
+                                            ? 'Kailangan ang pahintulot sa camera para makapag-scan ng barcode.\nMagbigay ng pahintulot sa Settings, o gamitin ang manual entry sa ibaba.'
+                                            : 'Camera permission is required to scan barcodes.\nPlease grant permission in App Settings, or use manual entry below.')
+                                        : (isTl
+                                            ? 'Hindi magamit ang camera preview.\nGamitin ang manual entry ng barcode sa ibaba.'
+                                            : 'Camera preview unavailable.\nPlease use manual barcode entry below.'),
+                                    textAlign: TextAlign.center,
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          );
+                        },
                         onDetect: (capture) {
                           for (final barcode in capture.barcodes) {
                             final val = barcode.rawValue;
@@ -199,8 +239,8 @@ class _BarcodeScannerSheetState extends State<BarcodeScannerSheet> {
                           const SizedBox(height: 8),
                           Text(
                             _isTorchOn
-                                ? 'Flashlight ON • Align barcode in frame'
-                                : 'Align product barcode inside frame',
+                                ? (isTl ? 'Bukas ang Flashlight • Itapat ang barcode sa frame' : 'Flashlight ON • Align barcode in frame')
+                                : (isTl ? 'Itapat ang barcode ng paninda sa loob ng frame' : 'Align product barcode inside frame'),
                             style: const TextStyle(
                               color: Colors.white70,
                               fontSize: 12,
@@ -232,7 +272,7 @@ class _BarcodeScannerSheetState extends State<BarcodeScannerSheet> {
 
               // Manual Entry Fallback Section
               Text(
-                'Or enter barcode manually:',
+                isTl ? 'O ilagay ang barcode mano-mano:' : 'Or enter barcode manually:',
                 style: TextStyle(
                   fontSize: 12.5,
                   fontWeight: FontWeight.w700,
@@ -267,7 +307,7 @@ class _BarcodeScannerSheetState extends State<BarcodeScannerSheet> {
                     child: ElevatedButton(
                       key: const Key('submit_manual_barcode_btn'),
                       onPressed: () => _submitBarcode(_manualCtrl.text),
-                      child: const Text('Use Code'),
+                      child: Text(isTl ? 'Gamitin' : 'Use Code'),
                     ),
                   ),
                 ],

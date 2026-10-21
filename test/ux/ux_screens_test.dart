@@ -173,10 +173,10 @@ void main() {
       await tester.tap(find.textContaining('Lucky Me Pancit Canton').first);
       await tester.pumpAndSettle();
 
-      // Verify item is in cart and Floating Cart Bar appears with "Tingnan" button
+      // Verify item is in cart and Floating Cart Bar appears with "View" button
       expect(cartProv.itemCount, equals(1));
       expect(find.text('x1'), findsOneWidget);
-      expect(find.text('Tingnan'), findsOneWidget);
+      expect(find.text('View'), findsOneWidget);
     });
 
     testWidgets('UX-04: POS Checkout Bottom Sheet opens payment modal, calculates change, and completes sale', (tester) async {
@@ -188,8 +188,8 @@ void main() {
       cartProv.addToCart(firstProd);
       await tester.pumpAndSettle();
 
-      // Open Cart Bottom Sheet via "Tingnan"
-      await tester.tap(find.text('Tingnan'));
+      // Open Cart Bottom Sheet via "View"
+      await tester.tap(find.text('View'));
       await tester.pumpAndSettle();
 
       expect(find.textContaining(AppStrings.cartTitle), findsOneWidget);
@@ -215,13 +215,13 @@ void main() {
 
       expect(find.text(AppStrings.productsTitle), findsOneWidget);
 
-      // Toggle Low Stock filter chip ("Mababa (N)")
-      await tester.tap(find.textContaining('Mababa'));
+      // Toggle Low Stock filter chip ("Low Stock (N)")
+      await tester.tap(find.textContaining('Low Stock'));
       await tester.pumpAndSettle();
       expect(productProv.filterLowStockOnly, isTrue);
 
       // Untoggle Low Stock filter chip to see all products
-      await tester.tap(find.textContaining('Mababa'));
+      await tester.tap(find.textContaining('Low Stock'));
       await tester.pumpAndSettle();
 
       final targetProd = productProv.filteredProducts.first;
@@ -234,7 +234,7 @@ void main() {
       expect(find.text('Quick Restock: ${targetProd.name}'), findsOneWidget);
 
       // Confirm +10 default restock
-      await tester.tap(find.text('I-kumpirma'));
+      await tester.tap(find.text('Confirm'));
       await tester.pumpAndSettle();
 
       final updatedProd = productProv.allProducts.firstWhere((p) => p.id == targetProd.id);
@@ -258,8 +258,8 @@ void main() {
 
       expect(find.text(debtor.displayName), findsOneWidget);
 
-      // Tap "Bayad" button
-      await tester.tap(find.text('Bayad').first);
+      // Tap "Pay" button
+      await tester.tap(find.text('Pay').first);
       await tester.pumpAndSettle();
 
       expect(find.text('Pay Utang: ${debtor.displayName}'), findsOneWidget);

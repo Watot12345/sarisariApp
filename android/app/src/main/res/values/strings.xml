@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">SariMe</string>
-    <string name="widget_description">Quick view of today's sales, profit, and fast access to Sell and Scan.</string>
+    <string name="widget_description">Quick view of daily sales, profit, and fast access to Sell and Scan.</string>
 </resources>

@@ -83,7 +83,7 @@ class HomeScreen extends StatelessWidget {
           const NotificationBellButton(),
           IconButton(
             icon: const Icon(Icons.settings_outlined),
-            tooltip: AppStrings.navSettings,
+            tooltip: isTl ? 'Mga Setting' : AppStrings.navSettings,
             onPressed: () {
               HapticFeedback.lightImpact();
               Navigator.of(context).pushNamed('/settings');
@@ -229,6 +229,20 @@ class HomeScreen extends StatelessWidget {
                         const maxVal = 500000;
                         final double ratio = (point.salesCents / maxVal).clamp(0.1, 1.0);
                         final isToday = point.dayName == 'Today';
+                        String displayDay = point.dayName;
+                        if (isToday) {
+                          displayDay = isTl ? 'Ngayon' : 'Today';
+                        } else if (isTl) {
+                          switch (point.dayName) {
+                            case 'Mon': displayDay = 'Lun'; break;
+                            case 'Tue': displayDay = 'Mar'; break;
+                            case 'Wed': displayDay = 'Miy'; break;
+                            case 'Thu': displayDay = 'Huw'; break;
+                            case 'Fri': displayDay = 'Biy'; break;
+                            case 'Sat': displayDay = 'Sab'; break;
+                            case 'Sun': displayDay = 'Lin'; break;
+                          }
+                        }
 
                         return Expanded(
                           child: Column(
@@ -246,7 +260,7 @@ class HomeScreen extends StatelessWidget {
                               ),
                               const SizedBox(height: 6),
                               Text(
-                                point.dayName,
+                                displayDay,
                                 style: TextStyle(
                                   fontSize: 10,
                                   fontWeight: isToday ? FontWeight.bold : FontWeight.normal,

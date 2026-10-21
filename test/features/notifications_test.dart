@@ -249,13 +249,8 @@ void main() {
       // NotificationsSheet should be visible
       expect(find.byType(NotificationsSheet), findsOneWidget);
       expect(find.text('Store Notifications'), findsOneWidget);
-      expect(find.byKey(const Key('send_test_push_btn')), findsOneWidget);
-
-      // Tap Test Push Notification button
-      await tester.tap(find.byKey(const Key('send_test_push_btn')));
-      await tester.pumpAndSettle();
-
-      expect(find.textContaining('Test Push Notification'), findsWidgets);
+      // Dev test push button should be removed in release mode
+      expect(find.byKey(const Key('send_test_push_btn')), findsNothing);
 
       // Tap "Mark all read"
       await tester.tap(find.byKey(const Key('mark_all_read_btn')));
@@ -264,7 +259,7 @@ void main() {
       expect(notifProv.unreadCount, equals(0));
     });
 
-    testWidgets('NOTIF-06: SettingsScreen displays Notifications & Alerts card with Test Push button and opens sheet', (tester) async {
+    testWidgets('NOTIF-06: SettingsScreen displays Notifications & Alerts tile and opens sheet without dev test button', (tester) async {
       tester.view.physicalSize = const Size(412, 1200);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(tester.view.resetPhysicalSize);
@@ -280,15 +275,16 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.text('Notifications & Alerts'), findsOneWidget);
+      expect(find.text('Notifications & Alerts', skipOffstage: false), findsOneWidget);
       expect(find.byKey(const Key('settings_notifications_tile')), findsOneWidget);
-      expect(find.byKey(const Key('settings_quick_test_notif_btn')), findsOneWidget);
+      // Dev test button is removed for release
+      expect(find.byKey(const Key('settings_quick_test_notif_btn')), findsNothing);
 
-      // Tap Quick Test Notification button in Settings
-      await tester.tap(find.byKey(const Key('settings_quick_test_notif_btn')));
+      // Tap Notifications tile to open sheet
+      await tester.tap(find.byKey(const Key('settings_notifications_tile')));
       await tester.pumpAndSettle();
 
-      expect(find.text('Test push notification dispatched!'), findsOneWidget);
+      expect(find.byType(NotificationsSheet), findsOneWidget);
     });
   });
 }

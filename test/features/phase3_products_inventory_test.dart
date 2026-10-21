@@ -13,6 +13,7 @@ import 'package:tindahan/data/db/seed.dart';
 import 'package:tindahan/data/models/product.dart';
 import 'package:tindahan/data/repositories/product_repository.dart';
 import 'package:tindahan/data/repositories/stock_repository.dart';
+import 'package:tindahan/core/localization/language_provider.dart';
 import 'package:tindahan/features/products/providers/product_provider.dart';
 import 'package:tindahan/features/products/screens/products_screen.dart';
 
@@ -49,10 +50,11 @@ void main() {
     await db.close();
   });
 
-  Widget wrapProductsScreen() {
+  Widget wrapProductsScreen({LanguageProvider? lang}) {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => ThemeProvider()),
+        ChangeNotifierProvider.value(value: lang ?? LanguageProvider()),
         ChangeNotifierProvider.value(value: productProv),
       ],
       child: MaterialApp(
@@ -235,8 +237,8 @@ void main() {
       await tester.pumpAndSettle();
       expect(productProv.searchQuery, isEmpty);
 
-      // Tap Mababa low-stock filter chip
-      await tester.tap(find.textContaining('Mababa'));
+      // Tap Low Stock filter chip
+      await tester.tap(find.textContaining('Low Stock'));
       await tester.pumpAndSettle();
       expect(productProv.filterLowStockOnly, isTrue);
     });
@@ -254,29 +256,29 @@ void main() {
       await tester.tap(find.text(AppStrings.addProduct));
       await tester.pumpAndSettle();
 
-      expect(find.text('Magdagdag ng Produkto'), findsOneWidget);
+      expect(find.text('Add Product'), findsOneWidget);
 
       // Enter product name, selling price (₱20.00), and cost (₱15.00)
       await tester.enterText(
-        find.widgetWithText(TextFormField, 'Pangalan ng Produkto *'),
+        find.widgetWithText(TextFormField, 'Product Name *'),
         'Choco Mucho White',
       );
       await tester.enterText(
-        find.widgetWithText(TextFormField, 'Presyo (₱) *'),
+        find.widgetWithText(TextFormField, 'Price (₱) *'),
         '20.00',
       );
       await tester.enterText(
-        find.widgetWithText(TextFormField, 'Puhunan (₱)'),
+        find.widgetWithText(TextFormField, 'Cost (₱)'),
         '15.00',
       );
       await tester.pumpAndSettle();
 
-      // Verify live profit margin indicator appears ("Tubo bawat piraso:" ₱5.00 (25.0%))
-      expect(find.text('Tubo bawat piraso:'), findsOneWidget);
+      // Verify live profit margin indicator appears ("Profit per item:" ₱5.00 (25.0%))
+      expect(find.text('Profit per item:'), findsOneWidget);
       expect(find.textContaining('25.0%'), findsOneWidget);
 
-      // Scroll down and tap "Idagdag sa Tindahan"
-      final saveBtn = find.text('Idagdag sa Tindahan');
+      // Scroll down and tap "Add to Inventory"
+      final saveBtn = find.text('Add to Inventory');
       await tester.ensureVisible(saveBtn);
       await tester.tap(saveBtn);
       await tester.pumpAndSettle();
@@ -301,21 +303,21 @@ void main() {
       await tester.tap(find.text(targetProd.name));
       await tester.pumpAndSettle();
 
-      expect(find.text('Presyo ng Benta'), findsOneWidget);
-      expect(find.text('Kasalukuyang Stock'), findsOneWidget);
+      expect(find.text('Selling Price'), findsOneWidget);
+      expect(find.text('Current Stock'), findsOneWidget);
 
-      // Tap "I-adjust" button
-      await tester.tap(find.text('I-adjust'));
+      // Tap "Adjust" button
+      await tester.tap(find.text('Adjust'));
       await tester.pumpAndSettle();
 
-      expect(find.text('I-adjust ang Stock: ${targetProd.name}'), findsOneWidget);
+      expect(find.text('Adjust Stock: ${targetProd.name}'), findsOneWidget);
 
       // Tap '+' icon in adjustment dialog to increment stock by 1
       await tester.tap(find.byIcon(Icons.add).last);
       await tester.pumpAndSettle();
 
       // Save adjustment
-      await tester.tap(find.text('I-save ang Adjustment'));
+      await tester.tap(find.text('Save Adjustment'));
       await tester.pumpAndSettle();
 
       final updated = productProv.allProducts.firstWhere((p) => p.id == targetProd.id);
@@ -348,10 +350,10 @@ void main() {
       await tester.tap(find.text('PACK'));
       await tester.pumpAndSettle();
 
-      expect(find.text('Tingi Pack Available'), findsOneWidget);
+      expect(find.text('Retail Split Available'), findsOneWidget);
 
-      // Tap "Buksan (Break)"
-      await tester.tap(find.text('Buksan (Break)'));
+      // Tap "Break Pack"
+      await tester.tap(find.text('Break Pack'));
       await tester.pumpAndSettle();
 
       final packAfter = productProv.allProducts.firstWhere((p) => p.id == packProd.id);
@@ -370,10 +372,10 @@ void main() {
       await tester.tap(find.byIcon(Icons.delete_outline_rounded).first);
       await tester.pumpAndSettle();
 
-      expect(find.text('I-delete si ${targetProd.name}?'), findsOneWidget);
+      expect(find.text('Delete ${targetProd.name}?'), findsOneWidget);
 
       // Confirm deletion
-      await tester.tap(find.text('Oo, I-delete'));
+      await tester.tap(find.text('Yes, Delete'));
       await tester.pumpAndSettle();
 
       expect(productProv.allProducts.any((p) => p.id == targetProd.id), isFalse);

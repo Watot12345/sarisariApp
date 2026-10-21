@@ -57,7 +57,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
         return StatefulBuilder(
           builder: (context, setDialogState) {
             return AlertDialog(
-              title: Text('Quick Restock: ${product.name}'),
+              title: Text(isTl ? 'Mabilisang Restock: ${product.name}' : 'Quick Restock: ${product.name}'),
               content: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -110,7 +110,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
                       ),
                     );
                   },
-                  child: const Text('I-kumpirma'),
+                  child: Text(isTl ? 'I-kumpirma' : 'Confirm'),
                 ),
               ],
             );
@@ -121,7 +121,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
   }
 
   void _confirmDeleteProduct(BuildContext context, Product product) {
-    final isTl = context.read<LanguageProvider?>()?.isTagalog ?? true;
+    final isTl = context.read<LanguageProvider?>()?.isTagalog ?? false;
     showDialog(
       context: context,
       builder: (dialogCtx) => AlertDialog(
@@ -168,7 +168,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
     final theme = Theme.of(context);
     final productProv = context.watch<ProductProvider>();
     final langProv = context.watch<LanguageProvider?>();
-    final isTl = langProv?.isTagalog ?? true;
+    final isTl = langProv?.isTagalog ?? false;
     final products = productProv.filteredProducts;
 
     return Scaffold(
@@ -230,7 +230,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
                     children: [
                       const Icon(Icons.warning_amber_rounded, size: 16),
                       const SizedBox(width: 4),
-                      Text('Mababa (${productProv.lowStockProducts.length})'),
+                      Text('${isTl ? "Mababa" : "Low Stock"} (${productProv.lowStockProducts.length})'),
                     ],
                   ),
                   selected: productProv.filterLowStockOnly,
@@ -525,7 +525,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
           AddEditProductSheet.show(context);
         },
         icon: const Icon(Icons.add),
-        label: const Text(AppStrings.addProduct),
+        label: Text(isTl ? 'Bagong Paninda' : AppStrings.addProduct),
         backgroundColor: AppTheme.primaryGreen,
         foregroundColor: Colors.white,
       ),

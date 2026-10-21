@@ -512,7 +512,7 @@ class _FloatingCartBar extends StatelessWidget {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Text('Tingnan'),
+                  Text(isTl ? 'Tingnan' : 'View'),
                   const SizedBox(width: 4),
                   const Icon(Icons.arrow_forward_rounded, size: 16),
                 ],
@@ -722,7 +722,7 @@ class _CartBottomSheetContent extends StatelessWidget {
                             Navigator.pop(context); // Close cart sheet
                             _openPaymentSheet(context);
                           },
-                    child: Text('${AppStrings.charge} (${CurrencyFormatter.format(cartProv.totalCents)})'),
+                    child: Text('${isTl ? "Singilin" : AppStrings.charge} (${CurrencyFormatter.format(cartProv.totalCents)})'),
                   ),
                 ],
               ),
@@ -903,7 +903,9 @@ class _PaymentSheetContent extends StatelessWidget {
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
-                          'Lampas sa credit limit ni ${cartProv.selectedCustomer?.displayName ?? "customer"}! Maaari pa ring ituloy ng may-ari.',
+                          isTl
+                              ? 'Lampas sa credit limit ni ${cartProv.selectedCustomer?.displayName ?? "customer"}! Maaari pa ring ituloy ng may-ari.'
+                              : 'Exceeds credit limit for ${cartProv.selectedCustomer?.displayName ?? "customer"}! Owner may still proceed.',
                           style: const TextStyle(
                             fontSize: 11.5,
                             fontWeight: FontWeight.w700,
@@ -951,7 +953,7 @@ class _PaymentSheetContent extends StatelessWidget {
                       }
                     }
                   : null,
-              child: const Text(AppStrings.confirmSale),
+              child: Text(isTl ? 'I-kumpirma ang Benta' : AppStrings.confirmSale),
             ),
           ],
         ),
@@ -1001,9 +1003,9 @@ class _PaymentSheetContent extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 16),
-                const Text(
-                  'Benta Matagumpay!',
-                  style: TextStyle(
+                Text(
+                  isTl ? 'Benta Matagumpay!' : 'Sale Completed!',
+                  style: const TextStyle(
                     fontSize: 22,
                     fontWeight: FontWeight.w900,
                     letterSpacing: -0.4,
@@ -1012,8 +1014,12 @@ class _PaymentSheetContent extends StatelessWidget {
                 const SizedBox(height: 6),
                 Text(
                   isUtang
-                      ? 'Nai-record na sa utang ni $customerName'
-                      : 'Nai-record na ang bayad sa sales.',
+                      ? (isTl
+                          ? 'Nai-record na sa utang ni $customerName'
+                          : 'Recorded in $customerName\'s credit account')
+                      : (isTl
+                          ? 'Nai-record na ang bayad sa sales.'
+                          : 'Payment successfully recorded in sales.'),
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 14,
@@ -1034,10 +1040,10 @@ class _PaymentSheetContent extends StatelessWidget {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Flexible(
+                        Flexible(
                           child: Text(
-                            'Sukli sa Mamimili:',
-                            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                            isTl ? 'Sukli sa Mamimili:' : 'Customer Change:',
+                            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
@@ -1054,7 +1060,7 @@ class _PaymentSheetContent extends StatelessWidget {
                 const SizedBox(height: 24),
                 ElevatedButton(
                   onPressed: () => Navigator.pop(ctx),
-                  child: Text(isTl ? 'Kasunod na Mamimili (Next)' : 'Next Customer'),
+                  child: Text(isTl ? 'Kasunod na Mamimili' : 'Next Customer'),
                 ),
               ],
             ),
@@ -1133,7 +1139,7 @@ class _SalesHistorySheetContent extends StatelessWidget {
                 );
               }
             },
-            child: const Text('Kumpirmahin ang Void'),
+            child: Text(isTl ? 'Kumpirmahin ang Void' : 'Confirm Void'),
           ),
         ],
       ),
@@ -1170,10 +1176,10 @@ class _SalesHistorySheetContent extends StatelessWidget {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Expanded(
+                Expanded(
                   child: Text(
-                    'Kasaysayan ng Benta (Sales History)',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                    isTl ? 'Kasaysayan ng Benta' : 'Sales History',
+                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
@@ -1249,7 +1255,7 @@ class _SalesHistorySheetContent extends StatelessWidget {
                               ),
                               onPressed: () => _confirmVoidSale(context, sale.id, sale.totalCents),
                               icon: const Icon(Icons.undo_rounded, size: 16),
-                              label: const Text('I-void'),
+                              label: Text(isTl ? 'I-void' : 'Void'),
                             ),
                         ],
                       );

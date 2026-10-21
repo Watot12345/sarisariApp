@@ -393,8 +393,8 @@ void main() {
       await tester.enterText(find.byType(TextField), debtor.name);
       await tester.pumpAndSettle();
 
-      // Tap "Bayad" button
-      await tester.tap(find.text('Bayad').first);
+      // Tap "Pay" button
+      await tester.tap(find.text('Pay').first);
       await tester.pumpAndSettle();
 
       // Verify RecordPaymentSheet is displayed
@@ -475,7 +475,7 @@ void main() {
       expect(find.text('Current Balance (Utang):'), findsOneWidget);
       expect(find.text('Ledger History'), findsOneWidget);
       expect(find.text('Utang Charge'), findsOneWidget);
-      expect(find.text('Bayad (Payment)'), findsOneWidget);
+      expect(find.text('Payment'), findsOneWidget);
 
       // Verify action buttons: Bayad Utang & Share Statement
       expect(find.byKey(const Key('customer_detail_bayad_btn')), findsOneWidget);

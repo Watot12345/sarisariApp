@@ -6,6 +6,7 @@ import '../../../core/constants.dart';
 import '../../../core/strings.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/utils/currency_formatter.dart';
+import '../../../core/localization/language_provider.dart';
 import '../../../data/models/customer.dart';
 import '../../../domain/utang_ledger.dart';
 import '../../../shared/widgets/price_text.dart';
@@ -44,7 +45,7 @@ class _CustomerDetailSheetState extends State<CustomerDetailSheet> {
     });
   }
 
-  Widget _buildRiskChip(String? level) {
+  Widget _buildRiskChip(String? level, bool isTl) {
     Color bg;
     Color fg;
     String label;
@@ -53,22 +54,22 @@ class _CustomerDetailSheetState extends State<CustomerDetailSheet> {
       case 'low':
         bg = AppTheme.primaryGreen.withOpacity(0.12);
         fg = AppTheme.primaryGreen;
-        label = AppStrings.riskLow;
+        label = isTl ? 'Maaasahan (Good)' : AppStrings.riskLow;
         break;
       case 'medium':
         bg = AppTheme.warningOrange.withOpacity(0.15);
         fg = AppTheme.warningOrange;
-        label = AppStrings.riskMedium;
+        label = isTl ? 'Katamtaman (Med)' : AppStrings.riskMedium;
         break;
       case 'high':
         bg = AppTheme.dangerRed.withOpacity(0.12);
         fg = AppTheme.dangerRed;
-        label = AppStrings.riskHigh;
+        label = isTl ? 'Mataas na Panganib' : AppStrings.riskHigh;
         break;
       default:
         bg = Colors.grey.withOpacity(0.15);
         fg = Colors.grey[700]!;
-        label = AppStrings.riskNew;
+        label = isTl ? 'Bagong Suki' : AppStrings.riskNew;
     }
 
     return Container(
@@ -94,9 +95,10 @@ class _CustomerDetailSheetState extends State<CustomerDetailSheet> {
       // Fallback for widget tests / environments without platform share plugin
       await Clipboard.setData(ClipboardData(text: statement));
       if (context.mounted) {
+        final isTl = context.read<LanguageProvider?>()?.isTagalog ?? false;
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Statement copied to clipboard!'),
+          SnackBar(
+            content: Text(isTl ? 'Nakopya ang talaan sa clipboard!' : 'Statement copied to clipboard!'),
             backgroundColor: AppTheme.primaryGreen,
           ),
         );
@@ -108,6 +110,8 @@ class _CustomerDetailSheetState extends State<CustomerDetailSheet> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final utangProv = context.watch<UtangProvider>();
+    final langProv = context.watch<LanguageProvider?>();
+    final isTl = langProv?.isTagalog ?? false;
     final customer = utangProv.customerById(widget.customer.id) ?? widget.customer;
     final entries = utangProv.ledgerFor(customer.id);
     final ledgerLines = UtangLedger.buildRunningLedger(entries);
@@ -171,10 +175,10 @@ class _CustomerDetailSheetState extends State<CustomerDetailSheet> {
                       ],
                     ),
                   ),
-                  _buildRiskChip(customer.riskLevel),
+                  _buildRiskChip(customer.riskLevel, isTl),
                   IconButton(
                     icon: const Icon(Icons.edit_outlined),
-                    tooltip: 'Edit Customer',
+                    tooltip: isTl ? 'I-edit ang Suki' : 'Edit Customer',
                     onPressed: () {
                       Navigator.pop(context);
                       AddEditCustomerSheet.show(context, customer: customer);
@@ -206,8 +210,8 @@ class _CustomerDetailSheetState extends State<CustomerDetailSheet> {
                       children: [
                         Row(
                           children: [
-                            const Expanded(
-                              child: Text('Current Balance (Utang):', style: TextStyle(fontSize: 13)),
+                            Expanded(
+                              child: Text(isTl ? 'Kasalukuyang Utang:' : 'Current Balance (Utang):', style: const TextStyle(fontSize: 13)),
                             ),
                             PriceText(
                               centavos: customer.balanceCents,
@@ -221,8 +225,8 @@ class _CustomerDetailSheetState extends State<CustomerDetailSheet> {
                         const SizedBox(height: 8),
                         Row(
                           children: [
-                            const Expanded(
-                              child: Text('Credit Limit:', style: TextStyle(fontSize: 12, color: Colors.grey)),
+                            Expanded(
+                              child: Text(isTl ? 'Limit sa Utang:' : 'Credit Limit:', style: const TextStyle(fontSize: 12, color: Colors.grey)),
                             ),
                             Text(
                               CurrencyFormatter.format(customer.creditLimitCents),
@@ -234,8 +238,8 @@ class _CustomerDetailSheetState extends State<CustomerDetailSheet> {
                           const SizedBox(height: 4),
                           Row(
                             children: [
-                              const Expanded(
-                                child: Text('Available Credit:', style: TextStyle(fontSize: 12, color: Colors.grey)),
+                              Expanded(
+                                child: Text(isTl ? 'Natitirang Pwedeng Utangin:' : 'Available Credit:', style: const TextStyle(fontSize: 12, color: Colors.grey)),
                               ),
                               Text(
                                 CurrencyFormatter.format(availableCredit),
@@ -289,7 +293,7 @@ class _CustomerDetailSheetState extends State<CustomerDetailSheet> {
                             padding: const EdgeInsets.symmetric(vertical: 12),
                           ),
                           icon: const Icon(Icons.payment, size: 18),
-                          label: const Text('Bayad Utang'),
+                          label: Text(isTl ? 'Bayad Utang' : 'Pay Utang'),
                           onPressed: customer.balanceCents <= 0
                               ? null
                               : () => RecordPaymentSheet.show(context, customer),
@@ -303,7 +307,7 @@ class _CustomerDetailSheetState extends State<CustomerDetailSheet> {
                             padding: const EdgeInsets.symmetric(vertical: 12),
                           ),
                           icon: const Icon(Icons.share_outlined, size: 18),
-                          label: const Text('Share Statement'),
+                          label: Text(isTl ? 'Ibahagi ang Talaan' : 'Share Statement'),
                           onPressed: () => _shareStatement(context, customer),
                         ),
                       ),
@@ -315,14 +319,16 @@ class _CustomerDetailSheetState extends State<CustomerDetailSheet> {
                   // Ledger Timeline Header
                   Row(
                     children: [
-                      const Expanded(
+                      Expanded(
                         child: Text(
-                          'Ledger History',
-                          style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+                          isTl ? 'Kasaysayan ng Talaan' : 'Ledger History',
+                          style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
                         ),
                       ),
                       Text(
-                        '${ledgerLines.length} transaction${ledgerLines.length == 1 ? '' : 's'}',
+                        isTl
+                            ? '${ledgerLines.length} transaksyon'
+                            : '${ledgerLines.length} transaction${ledgerLines.length == 1 ? '' : 's'}',
                         style: const TextStyle(fontSize: 12, color: Colors.grey),
                       ),
                     ],
@@ -339,7 +345,7 @@ class _CustomerDetailSheetState extends State<CustomerDetailSheet> {
                           Icon(Icons.receipt_long_outlined, size: 40, color: Colors.grey[400]),
                           const SizedBox(height: 8),
                           Text(
-                            'Walang utang history',
+                            isTl ? 'Walang utang history' : 'No credit history',
                             style: TextStyle(fontSize: 13, color: Colors.grey[600]),
                           ),
                         ],
@@ -384,7 +390,9 @@ class _CustomerDetailSheetState extends State<CustomerDetailSheet> {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
-                                      isCharge ? 'Utang Charge' : 'Bayad (Payment)',
+                                      isCharge
+                                          ? (isTl ? 'Bagong Utang' : 'Utang Charge')
+                                          : (isTl ? 'Bayad' : 'Payment'),
                                       style: const TextStyle(
                                         fontSize: 13,
                                         fontWeight: FontWeight.bold,

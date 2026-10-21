@@ -3,13 +3,16 @@ import '../db/app_database.dart';
 
 class SettingsRepository {
   final AppDatabase _appDb;
-  static final Map<String, String> _memoryFallback = {
-    'store_name': 'SariMe',
-    'theme_mode': 'system',
-    'policy_accepted': 'false',
-  };
+  final Map<String, String> _memoryFallback;
 
-  SettingsRepository([AppDatabase? appDb]) : _appDb = appDb ?? AppDatabase.instance;
+  SettingsRepository([AppDatabase? appDb])
+      : _appDb = appDb ?? AppDatabase.instance,
+        _memoryFallback = {
+          'store_name': 'SariMe',
+          'theme_mode': 'system',
+          'policy_accepted': 'false',
+          'app_language': 'english',
+        };
 
   Future<Database> get _db async => await _appDb.database;
 

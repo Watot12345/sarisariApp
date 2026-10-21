@@ -39,50 +39,62 @@ class _PolicyConsentScreenState extends State<PolicyConsentScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const Text(
-                '1. Zero-Cloud & 100% Offline Guarantee',
+                '1. Local Data Ownership & Privacy (RA 10173 / GDPR)',
                 style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
               ),
               const SizedBox(height: 4),
               Text(
                 isTl
-                    ? 'Ang SariMe ay walang internet connection permission sa system manifest (android.permission.INTERNET ay tinanggal). Hindi kailanman lumalabas sa iyong telepono ang mga detalye ng iyong tindahan, benta, customer, o utang.'
-                    : 'SariMe has no internet connection permission in the system manifest (android.permission.INTERNET is removed). Your store details, sales, customers, and utang records never leave your phone.',
+                    ? 'Lahat ng detalye ng iyong tindahan, paninda, benta, at listahan ng utang ay naka-save lamang sa lokal na SQLite database sa iyong telepono. Walang personal o pinansyal na data ng tindahan ang kinokolekta o ipinapadala sa anumang server.'
+                    : 'All store inventory, sales transactions, profit reports, and customer utang records are stored locally in an on-device SQLite database. Zero store or customer data is collected or transmitted to external servers.',
                 style: const TextStyle(fontSize: 12),
               ),
               const SizedBox(height: 12),
               const Text(
-                '2. Camera Access (mobile_scanner)',
+                '2. Camera Access (android.permission.CAMERA)',
                 style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
               ),
               const SizedBox(height: 4),
               Text(
                 isTl
-                    ? 'Ginagamit lamang ang camera sa live viewfinder para basahin ang mga barcode ng paninda. Hindi ito nagse-save ng litrato o video sa iyong gallery o memory.'
-                    : 'The camera is used strictly in the live viewfinder to scan product barcodes. It does not save photos or videos to your gallery or memory.',
+                    ? 'Ginagamit lamang ang camera sa live viewfinder para basahin ang mga barcode ng paninda. Hindi ito nag-a-upload ng litrato o video sa labas ng iyong telepono.'
+                    : 'The camera is used strictly in the live viewfinder to scan product barcodes and attach local product images. No photos or videos leave your device.',
                 style: const TextStyle(fontSize: 12),
               ),
               const SizedBox(height: 12),
               const Text(
-                '3. Microphone Access (speech_to_text)',
+                '3. Update & Status Check (android.permission.INTERNET)',
                 style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
               ),
               const SizedBox(height: 4),
               Text(
                 isTl
-                    ? 'Ginagamit lamang ang microphone para sa on-device speech recognition para sa mga voice commands ng restock. Ang audio ay hindi nire-record o inililipat.'
-                    : 'The microphone is used only for on-device speech recognition for voice restock commands. Audio is never recorded or transmitted.',
+                    ? 'Ginagamit lamang ang internet kapag nagche-check ng bagong APK update o status mula sa opisyal na GitHub Releases.'
+                    : 'Internet access is used strictly to check GitHub Releases and GitHub Pages for APK version updates, announcements, and maintenance status.',
                 style: const TextStyle(fontSize: 12),
               ),
               const SizedBox(height: 12),
               const Text(
-                '4. File Storage & Backup (share_plus, file_picker)',
+                '4. User Data Deletion & Local Backup',
                 style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
               ),
               const SizedBox(height: 4),
               Text(
                 isTl
-                    ? 'Ikaw ang 100% na may-ari ng iyong data. Ang pag-export at pag-import ng backup ay ginagawa lamang kapag ikaw mismo ang pumili nito sa mga setting.'
-                    : 'You own 100% of your data. Exporting and importing backups only happen when you explicitly choose to do so in Settings.',
+                    ? 'Ikaw ang 100% na may-ari ng iyong data. Maaari kang mag-export ng backup o magbura ng lahat ng data anumang oras sa Settings > Reset All Store Data.'
+                    : 'You own 100% of your data. You can export a backup or permanently erase all records anytime via Settings > Reset All Store Data.',
+                style: const TextStyle(fontSize: 12),
+              ),
+              const SizedBox(height: 12),
+              const Text(
+                '5. As-Is Software & Non-BIR Fiscal Logbook Disclaimer',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                isTl
+                    ? 'Ang SariMe ay ibinibigay nang "AS IS" bilang digital logbook helper para sa maliliit na tindahan at hindi kapalit ng BIR-accredited fiscal POS machine.'
+                    : 'SariMe is provided "AS IS" as a digital logbook aid for micro-retailers and does not replace official BIR-accredited fiscal POS machines where required by law.',
                 style: const TextStyle(fontSize: 12),
               ),
             ],

@@ -358,7 +358,7 @@ class _AddEditProductSheetState extends State<AddEditProductSheet> {
     final isDark = theme.brightness == Brightness.dark;
     final productProv = context.watch<ProductProvider>();
     final langProv = context.watch<LanguageProvider?>();
-    final isTl = langProv?.isTagalog ?? true;
+    final isTl = langProv?.isTagalog ?? false;
 
     final availableCategories = {
       'Noodles',
@@ -424,7 +424,9 @@ class _AddEditProductSheetState extends State<AddEditProductSheet> {
                   children: [
                     Expanded(
                       child: Text(
-                        isEditing ? 'I-edit ang Produkto' : 'Magdagdag ng Produkto',
+                        isEditing
+                            ? (isTl ? 'I-edit ang Produkto' : 'Edit Product')
+                            : (isTl ? 'Magdagdag ng Produkto' : 'Add Product'),
                         style: const TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.w800,
@@ -581,7 +583,7 @@ class _AddEditProductSheetState extends State<AddEditProductSheet> {
                     prefixIcon: const Icon(Icons.qr_code_scanner_rounded),
                     suffixIcon: IconButton(
                       key: const Key('scan_barcode_in_form_btn'),
-                      tooltip: isTl ? 'Scan Barcode' : 'Scan Barcode',
+                      tooltip: isTl ? 'I-scan ang Barcode' : 'Scan Barcode',
                       icon: const Icon(Icons.center_focus_strong_rounded),
                       onPressed: () async {
                         final scanned = await BarcodeScannerSheet.show(

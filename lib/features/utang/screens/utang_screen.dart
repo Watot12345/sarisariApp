@@ -247,9 +247,9 @@ class _UtangScreenState extends State<UtangScreen> {
                                             HapticFeedback.lightImpact();
                                             _showPaymentBottomSheet(context, customer);
                                           },
-                                          child: const Text(
-                                            'Bayad',
-                                            style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                                          child: Text(
+                                            isTl ? 'Bayad' : 'Pay',
+                                            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
                                           ),
                                         ),
                                       ),

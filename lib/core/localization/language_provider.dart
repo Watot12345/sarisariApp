@@ -1,14 +1,21 @@
 import 'package:flutter/material.dart';
+import '../../data/repositories/settings_repository.dart';
 import '../strings.dart';
 
 enum AppLanguage { english, tagalog }
 
 /// Manages bilingual support for English and Tagalog (Filipino) across Tindahan.
 class LanguageProvider extends ChangeNotifier {
+  final SettingsRepository _settingsRepo;
   AppLanguage _language;
 
-  LanguageProvider({AppLanguage initialLanguage = AppLanguage.english})
-      : _language = initialLanguage;
+  LanguageProvider({
+    AppLanguage initialLanguage = AppLanguage.english,
+    SettingsRepository? settingsRepo,
+  })  : _language = initialLanguage,
+        _settingsRepo = settingsRepo ?? SettingsRepository() {
+    _loadPersistedLanguage();
+  }
 
   AppLanguage get language => _language;
   bool get isTagalog => _language == AppLanguage.tagalog;
@@ -18,16 +25,32 @@ class LanguageProvider extends ChangeNotifier {
   String get languageDisplayName =>
       isTagalog ? 'Tagalog (Filipino)' : 'English';
 
-  void setLanguage(AppLanguage lang) {
+  Future<void> _loadPersistedLanguage() async {
+    try {
+      final saved = await _settingsRepo.getSetting('app_language');
+      if (saved == 'tagalog' && _language != AppLanguage.tagalog) {
+        _language = AppLanguage.tagalog;
+        notifyListeners();
+      } else if (saved == 'english' && _language != AppLanguage.english) {
+        _language = AppLanguage.english;
+        notifyListeners();
+      }
+    } catch (_) {}
+  }
+
+  Future<void> setLanguage(AppLanguage lang) async {
     if (_language == lang) return;
     _language = lang;
     notifyListeners();
+    try {
+      await _settingsRepo.setSetting('app_language', lang.name);
+    } catch (_) {}
   }
 
-  void toggleLanguage() {
-    _language =
+  Future<void> toggleLanguage() async {
+    final next =
         _language == AppLanguage.english ? AppLanguage.tagalog : AppLanguage.english;
-    notifyListeners();
+    await setLanguage(next);
   }
 
   /// Translates between English and Tagalog strings based on active language.
@@ -83,4 +106,17 @@ class LanguageProvider extends ChangeNotifier {
         return tr('Sari-Sari Legend', 'Alamat ng Sari-Sari');
     }
   }
+
+  // App Updates & Releases Labels
+  String get updatesSectionTitle => tr('App Updates & Download Page', 'Mga Update at Download Page');
+  String get checkForUpdates => tr('Check for Updates', 'Maghanap ng Update');
+  String get checkUpdatesSubtitle => tr('Check GitHub for new features and bug fixes', 'Tingnan ang GitHub para sa mga bagong feature at ayos');
+  String get appUpToDate => tr('App is up to date', 'Nasa pinakabagong bersyon ka na');
+  String get updateAvailableTitle => tr('New Version Available!', 'May Bagong Bersyon!');
+  String get downloadApkNow => tr('Download APK Update', 'I-download ang Bagong APK');
+  String get visitLandingPage => tr('Visit Download Website', 'Buksan ang Website ng App');
+  String get offlineUpdateNotice => tr(
+        'Unable to check for updates offline. Please connect to Wi-Fi or mobile data.',
+        'Hindi makapaghanap ng update offline. Mangyaring kumonekta sa internet.',
+      );
 }

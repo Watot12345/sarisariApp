@@ -342,10 +342,10 @@ void main() {
       await tester.tap(find.text(targetProd.name));
       await tester.pumpAndSettle();
 
-      expect(find.text('Tingnan'), findsOneWidget);
+      expect(find.text('View'), findsOneWidget);
 
       // Open Cart Bottom Sheet
-      await tester.tap(find.text('Tingnan'));
+      await tester.tap(find.text('View'));
       await tester.pumpAndSettle();
 
       // Increment quantity to 2
@@ -380,7 +380,7 @@ void main() {
       await tester.pumpAndSettle();
 
       // Open Cart Sheet -> Charge
-      await tester.tap(find.text('Tingnan'));
+      await tester.tap(find.text('View'));
       await tester.pumpAndSettle();
       await tester.tap(find.textContaining(AppStrings.charge));
       await tester.pumpAndSettle();
@@ -394,8 +394,8 @@ void main() {
       await tester.tap(find.text(AppStrings.confirmSale));
       await tester.pumpAndSettle();
 
-      expect(find.text('Benta Matagumpay!'), findsOneWidget);
-      expect(find.text('Sukli sa Mamimili:'), findsOneWidget);
+      expect(find.text('Sale Completed!'), findsOneWidget);
+      expect(find.text('Customer Change:'), findsOneWidget);
     });
 
     testWidgets('P4-UX-04: Utang Checkout flow selects customer, shows credit limit warning when exceeded, and completes credit sale', (tester) async {
@@ -416,7 +416,7 @@ void main() {
       await tester.tap(find.text(targetProd.name));
       await tester.pumpAndSettle();
 
-      await tester.tap(find.text('Tingnan'));
+      await tester.tap(find.text('View'));
       await tester.pumpAndSettle();
       await tester.tap(find.textContaining(AppStrings.charge));
       await tester.pumpAndSettle();
@@ -430,13 +430,13 @@ void main() {
       await tester.pumpAndSettle();
 
       // Credit limit warning banner visible
-      expect(find.textContaining('Lampas sa credit limit'), findsOneWidget);
+      expect(find.textContaining('Exceeds credit limit'), findsOneWidget);
 
       // Owner can still override and complete sale
       await tester.tap(find.text(AppStrings.confirmSale));
       await tester.pumpAndSettle();
 
-      expect(find.text('Benta Matagumpay!'), findsOneWidget);
+      expect(find.text('Sale Completed!'), findsOneWidget);
     });
 
     testWidgets('P4-UX-05: Sales History sheet lists recent sales and voids a sale with confirmation', (tester) async {
@@ -462,14 +462,14 @@ void main() {
       await tester.tap(find.byIcon(Icons.history_rounded));
       await tester.pumpAndSettle();
 
-      expect(find.text('Kasaysayan ng Benta (Sales History)'), findsOneWidget);
-      expect(find.text('I-void'), findsOneWidget);
+      expect(find.text('Sales History'), findsOneWidget);
+      expect(find.text('Void'), findsOneWidget);
 
-      // Tap I-void -> confirm dialog
-      await tester.tap(find.text('I-void'));
+      // Tap Void -> confirm dialog
+      await tester.tap(find.text('Void'));
       await tester.pumpAndSettle();
 
-      await tester.tap(find.text('Kumpirmahin ang Void'));
+      await tester.tap(find.text('Confirm Void'));
       await tester.pumpAndSettle();
 
       // Verify stock was restored and sale is marked VOIDED

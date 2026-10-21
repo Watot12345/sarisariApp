@@ -220,7 +220,7 @@ void main() {
       // Verify item is added to cart and FloatingCartBar appears
       expect(cartProv.itemCount, equals(1));
       expect(cartProv.items.first.product.id, equals(knownProd.id));
-      expect(find.text('Tingnan'), findsOneWidget);
+      expect(find.text('View'), findsOneWidget);
     });
 
     testWidgets('P5-UX-03: Scanning an unknown barcode on SellScreen offers registration and pre-fills AddEditProductSheet', (tester) async {
@@ -281,7 +281,7 @@ void main() {
       expect(find.text('Quick Restock: ${knownProd.name}'), findsOneWidget);
 
       // Confirm +10 restock
-      await tester.tap(find.text('I-kumpirma'));
+      await tester.tap(find.text('Confirm'));
       await tester.pumpAndSettle();
 
       final updatedProd = productProv.allProducts.firstWhere((p) => p.id == knownProd.id);

@@ -14,151 +14,7 @@ class ProductProvider extends ChangeNotifier {
   bool _isLoading = false;
   String? _errorMessage;
 
-  static const List<Product> _initialProducts = [
-    Product(
-      id: 1,
-      name: 'Lucky Me Pancit Canton Kalamansi',
-      barcode: '4800016644023',
-      categoryName: 'Noodles',
-      priceCents: 1500,
-      costCents: 1250,
-      stockQty: 24,
-      lowStockLevel: 8,
-    ),
-    Product(
-      id: 2,
-      name: 'Lucky Me Pancit Canton Chilimansi',
-      barcode: '4800016644030',
-      categoryName: 'Noodles',
-      priceCents: 1500,
-      costCents: 1250,
-      stockQty: 18,
-      lowStockLevel: 8,
-    ),
-    Product(
-      id: 3,
-      name: 'Coca-Cola Mismo 290ml',
-      barcode: '4801981110022',
-      categoryName: 'Drinks',
-      priceCents: 2000,
-      costCents: 1650,
-      stockQty: 32,
-      lowStockLevel: 10,
-    ),
-    Product(
-      id: 4,
-      name: 'Sprite Mismo 290ml',
-      barcode: '4801981110039',
-      categoryName: 'Drinks',
-      priceCents: 2000,
-      costCents: 1650,
-      stockQty: 4,
-      lowStockLevel: 10,
-    ),
-    Product(
-      id: 5,
-      name: 'Piattos Cheese 85g',
-      barcode: '4800016054112',
-      categoryName: 'Snacks',
-      priceCents: 3800,
-      costCents: 3200,
-      stockQty: 12,
-      lowStockLevel: 5,
-    ),
-    Product(
-      id: 6,
-      name: 'Nissin Cup Noodles Seafood',
-      categoryName: 'Noodles',
-      priceCents: 2800,
-      costCents: 2350,
-      stockQty: 6,
-      lowStockLevel: 5,
-    ),
-    Product(
-      id: 7,
-      name: 'Kopiko Blanca 3-in-1 Sachet',
-      categoryName: 'Coffee',
-      priceCents: 1400,
-      costCents: 1100,
-      stockQty: 45,
-      lowStockLevel: 15,
-    ),
-    Product(
-      id: 8,
-      name: 'Great Taste White Coffee Sachet',
-      categoryName: 'Coffee',
-      priceCents: 1400,
-      costCents: 1100,
-      stockQty: 30,
-      lowStockLevel: 15,
-    ),
-    Product(
-      id: 9,
-      name: 'Safeguard Pure White Soap 60g',
-      categoryName: 'Toiletries',
-      priceCents: 2600,
-      costCents: 2150,
-      stockQty: 8,
-      lowStockLevel: 5,
-    ),
-    Product(
-      id: 10,
-      name: 'Tide Plus Detergent Powder Sachet',
-      categoryName: 'Household',
-      priceCents: 1600,
-      costCents: 1300,
-      stockQty: 3,
-      lowStockLevel: 10,
-    ),
-    Product(
-      id: 11,
-      name: 'Skyflakes Crackers Single Pack',
-      categoryName: 'Snacks',
-      priceCents: 800,
-      costCents: 625,
-      stockQty: 25,
-      lowStockLevel: 10,
-    ),
-    Product(
-      id: 12,
-      name: 'Marlboro Red (Stick - Tingi)',
-      categoryName: 'Cigarettes',
-      priceCents: 1000,
-      costCents: 800,
-      stockQty: 60,
-      lowStockLevel: 20,
-    ),
-    Product(
-      id: 13,
-      name: 'Datu Puti Soy Sauce 200ml',
-      categoryName: 'Condiments',
-      priceCents: 1900,
-      costCents: 1550,
-      stockQty: 14,
-      lowStockLevel: 6,
-    ),
-    Product(
-      id: 14,
-      name: 'Datu Puti Vinegar 200ml',
-      categoryName: 'Condiments',
-      priceCents: 1700,
-      costCents: 1380,
-      stockQty: 0,
-      lowStockLevel: 6,
-    ),
-    Product(
-      id: 15,
-      name: 'Mega Sardines Red 155g',
-      barcode: '4806502010014',
-      categoryName: 'Canned Goods',
-      priceCents: 2500,
-      costCents: 2100,
-      stockQty: 15,
-      lowStockLevel: 6,
-    ),
-  ];
-
-  List<Product> _products = List.of(_initialProducts);
+  List<Product> _products = [];
 
   ProductProvider({
     ProductRepository? productRepo,
@@ -199,7 +55,16 @@ class ProductProvider extends ChangeNotifier {
     return _products.where((p) => p.isLowStock || p.isOutOfStock).toList();
   }
 
-  /// Reloads products from SQLite database; keeps defaults if in web preview
+  /// Clears all in-memory products (used when resetting store data).
+  void clearAll() {
+    _products = [];
+    _searchQuery = '';
+    _selectedCategory = 'All';
+    _filterLowStockOnly = false;
+    notifyListeners();
+  }
+
+  /// Reloads products from SQLite database.
   Future<void> loadProducts() async {
     _isLoading = true;
     _errorMessage = null;
@@ -207,11 +72,8 @@ class ProductProvider extends ChangeNotifier {
 
     try {
       final dbProducts = await _productRepo.getProducts();
-      if (dbProducts.isNotEmpty) {
-        _products = dbProducts;
-      }
+      _products = dbProducts;
     } catch (e) {
-      // In web or fallback mode, initial products remain loaded
       debugPrint('ProductProvider note: $e');
     } finally {
       _isLoading = false;

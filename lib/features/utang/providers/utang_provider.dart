@@ -16,62 +16,7 @@ class UtangProvider extends ChangeNotifier {
   bool _isLoading = false;
   String? _errorMessage;
 
-  static const List<Customer> _initialCustomers = [
-    Customer(
-      id: 1,
-      name: 'Elena Santos',
-      nickname: 'Aling Nena',
-      phone: '09171234567',
-      creditLimitCents: 100000,
-      balanceCents: 45000,
-      riskScore: 22,
-      riskLevel: 'low',
-      notes: 'Pays every Friday payday',
-    ),
-    Customer(
-      id: 2,
-      name: 'Rodrigo Cruz',
-      nickname: 'Mang Digong',
-      phone: '09287654321',
-      creditLimitCents: 50000,
-      balanceCents: 48000,
-      riskScore: 54,
-      riskLevel: 'medium',
-      notes: 'Remind before month end',
-    ),
-    Customer(
-      id: 3,
-      name: 'Jun-Jun Bautista',
-      nickname: 'Tricycle Driver',
-      creditLimitCents: 30000,
-      balanceCents: 32000,
-      riskScore: 78,
-      riskLevel: 'high',
-      notes: 'Overdue by 3 weeks; stop giving credit',
-    ),
-    Customer(
-      id: 4,
-      name: 'Teresa Reyes',
-      nickname: 'Ate Tess',
-      phone: '09051112233',
-      creditLimitCents: 150000,
-      balanceCents: 15000,
-      riskScore: 15,
-      riskLevel: 'low',
-    ),
-    Customer(
-      id: 5,
-      name: 'Michael Tan',
-      nickname: 'Bagong Lipat',
-      creditLimitCents: 20000,
-      balanceCents: 0,
-      riskScore: null,
-      riskLevel: null,
-      notes: 'New in neighborhood',
-    ),
-  ];
-
-  List<Customer> _customers = List.of(_initialCustomers);
+  List<Customer> _customers = [];
 
   UtangProvider({
     CustomerRepository? customerRepo,
@@ -101,6 +46,14 @@ class UtangProvider extends ChangeNotifier {
     }).toList();
   }
 
+  /// Clears all in-memory customers and ledgers (used when resetting store data).
+  void clearAll() {
+    _customers = [];
+    _ledgers.clear();
+    _searchQuery = '';
+    notifyListeners();
+  }
+
   /// Reloads all customers and their live utang balances from SQLite
   Future<void> loadCustomers() async {
     _isLoading = true;
@@ -109,9 +62,7 @@ class UtangProvider extends ChangeNotifier {
 
     try {
       final dbCustomers = await _customerRepo.getCustomers();
-      if (dbCustomers.isNotEmpty) {
-        _customers = dbCustomers;
-      }
+      _customers = dbCustomers;
     } catch (e) {
       debugPrint('UtangProvider note: $e');
     } finally {

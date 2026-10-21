@@ -57,6 +57,25 @@ class _HomeWidgetPreviewCardState extends State<HomeWidgetPreviewCard> {
     );
   }
 
+  Future<void> _pinToHomeScreen() async {
+    HapticFeedback.mediumImpact();
+    await _syncNow();
+    final ok = await HomeWidgetService.requestPinWidget();
+    if (!mounted) return;
+    if (!ok) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            (context.read<LanguageProvider?>()?.isTagalog ?? false)
+                ? 'Pindutin nang matagal ang iyong phone home screen at piliin ang "Widgets" para ilagay ang SariMe.'
+                : 'Long-press your phone home screen, tap "Widgets", and select SariMe.',
+          ),
+          duration: const Duration(seconds: 4),
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -334,34 +353,58 @@ class _HomeWidgetPreviewCardState extends State<HomeWidgetPreviewCard> {
 
             const SizedBox(height: 14),
 
-            // Sync Button
-            ElevatedButton.icon(
-              key: const Key('sync_home_widget_btn'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppTheme.primaryGreen,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 11),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
-                ),
-              ),
-              icon: _isSyncing
-                  ? const SizedBox(
-                      width: 16,
-                      height: 16,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: Colors.white,
+            // Action Buttons: Sync & Add to Screen
+            Row(
+              children: [
+                Expanded(
+                  child: ElevatedButton.icon(
+                    key: const Key('sync_home_widget_btn'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppTheme.primaryGreen,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 11),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
                       ),
-                    )
-                  : const Icon(Icons.sync_rounded, size: 18),
-              label: Text(
-                _isSyncing
-                    ? (isTl ? 'Sinasabay...' : 'Syncing...')
-                    : (isTl ? 'I-sync ang Widget Ngayon' : 'Sync Widget Now'),
-                style: const TextStyle(fontWeight: FontWeight.bold),
-              ),
-              onPressed: _isSyncing ? null : _syncNow,
+                    ),
+                    icon: _isSyncing
+                        ? const SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
+                          )
+                        : const Icon(Icons.sync_rounded, size: 18),
+                    label: Text(
+                      _isSyncing
+                          ? (isTl ? 'Sinasabay...' : 'Syncing...')
+                          : (isTl ? 'I-sync' : 'Sync Widget'),
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    onPressed: _isSyncing ? null : _syncNow,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: OutlinedButton.icon(
+                    key: const Key('pin_home_widget_btn'),
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 11),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                    icon: const Icon(Icons.add_to_home_screen_rounded, size: 18),
+                    label: Text(
+                      isTl ? 'Idagdag sa Screen' : 'Add to Phone',
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    onPressed: _pinToHomeScreen,
+                  ),
+                ),
+              ],
             ),
 
             const SizedBox(height: 12),

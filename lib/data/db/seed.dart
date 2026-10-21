@@ -2,6 +2,63 @@ import 'package:sqflite/sqflite.dart';
 
 /// Initial seed data for first launch of Tindahan.
 class DatabaseSeeder {
+  static const List<String> defaultCategories = [
+    'Noodles',
+    'Drinks',
+    'Snacks',
+    'Coffee',
+    'Toiletries',
+    'Household',
+    'Cigarettes',
+    'Condiments',
+    'Canned Goods',
+  ];
+
+  /// Production initializer: sets up standard product categories and default settings
+  /// WITHOUT inserting any dummy products, dummy customers, or dummy utang balances.
+  static Future<void> seedDefaultsOnly(Database db) async {
+    await db.transaction((txn) async {
+      for (final catName in defaultCategories) {
+        await txn.insert(
+          'categories',
+          {'name': catName},
+          conflictAlgorithm: ConflictAlgorithm.ignore,
+        );
+      }
+
+      await txn.insert(
+        'settings',
+        {'key': 'store_name', 'value': 'SariMe'},
+        conflictAlgorithm: ConflictAlgorithm.ignore,
+      );
+      await txn.insert(
+        'settings',
+        {'key': 'default_low_stock', 'value': '5'},
+        conflictAlgorithm: ConflictAlgorithm.ignore,
+      );
+      await txn.insert(
+        'settings',
+        {'key': 'voice_locale', 'value': 'fil_PH'},
+        conflictAlgorithm: ConflictAlgorithm.ignore,
+      );
+    });
+  }
+
+  /// Wipes all store transaction, product, and customer tables clean for a fresh start,
+  /// preserving only the default categories and basic settings.
+  static Future<void> resetAllStoreData(Database db) async {
+    await db.transaction((txn) async {
+      await txn.delete('sale_items');
+      await txn.delete('utang_entries');
+      await txn.delete('sales');
+      await txn.delete('stock_movements');
+      await txn.delete('products');
+      await txn.delete('customers');
+    });
+    await seedDefaultsOnly(db);
+  }
+
+  /// Test-only seeder used by automated unit/widget tests.
   static Future<void> seedIfEmpty(Database db) async {
     final count = Sqflite.firstIntValue(
       await db.rawQuery('SELECT COUNT(*) FROM products'),

@@ -98,6 +98,21 @@ class HomeWidgetService {
     }
   }
 
+  /// Programmatically requests Android OS to pin/add the SariMe widget directly to the phone's home screen.
+  static Future<bool> requestPinWidget() async {
+    if (kIsWeb || _isFlutterTest) return false;
+    try {
+      await HomeWidget.requestPinWidget(
+        name: androidWidgetProvider,
+        androidName: androidWidgetProvider,
+      );
+      return true;
+    } catch (e) {
+      debugPrint('HomeWidgetService requestPinWidget note: $e');
+      return false;
+    }
+  }
+
   /// Listens to widget click events while the app is in the background or active.
   static Stream<Uri?> get widgetClicked {
     if (_isFlutterTest) return const Stream.empty();
