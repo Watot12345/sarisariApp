@@ -11,6 +11,9 @@ import '../../../shared/widgets/stock_badge.dart';
 import '../../../shared/widgets/empty_state.dart';
 import '../../../shared/widgets/barcode_scanner_sheet.dart';
 import '../../../shared/widgets/product_image_thumbnail.dart';
+import '../../../shared/widgets/slide_action_tile.dart';
+import '../../../shared/widgets/store_header_title.dart';
+import '../../reports/widgets/printable_restock_receipt_sheet.dart';
 import '../providers/product_provider.dart';
 import '../widgets/add_edit_product_sheet.dart';
 import '../widgets/product_detail_sheet.dart';
@@ -143,9 +146,11 @@ class _ProductsScreenState extends State<ProductsScreen> {
             ),
             onPressed: () async {
               HapticFeedback.heavyImpact();
+              final sm = ScaffoldMessenger.of(context);
+              final nav = Navigator.of(dialogCtx);
               await context.read<ProductProvider>().deleteProduct(product.id);
-              Navigator.pop(dialogCtx);
-              ScaffoldMessenger.of(context).showSnackBar(
+              nav.pop();
+              sm.showSnackBar(
                 SnackBar(
                   content: Text(
                     isTl
@@ -171,13 +176,113 @@ class _ProductsScreenState extends State<ProductsScreen> {
     final isTl = langProv?.isTagalog ?? false;
     final products = productProv.filteredProducts;
 
+    TextStyle dropdownStyle = TextStyle(
+      fontSize: 13,
+      fontWeight: FontWeight.w700,
+      color: theme.colorScheme.onSurface,
+    );
+
+    final dropdownItems = <DropdownMenuItem<String>>[
+      DropdownMenuItem(
+        value: 'All',
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.grid_view_rounded, size: 16, color: AppTheme.primaryGreen),
+            const SizedBox(width: 6),
+            Flexible(
+              child: RichText(
+                overflow: TextOverflow.ellipsis,
+                text: TextSpan(
+                  style: dropdownStyle,
+                  text: isTl
+                      ? 'Lahat (${productProv.allProducts.length})'
+                      : 'All (${productProv.allProducts.length})',
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+      DropdownMenuItem(
+        value: 'LowStock',
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.warning_amber_rounded, size: 16, color: AppTheme.dangerRed),
+            const SizedBox(width: 6),
+            Flexible(
+              child: RichText(
+                overflow: TextOverflow.ellipsis,
+                text: TextSpan(
+                  style: dropdownStyle,
+                  text:
+                      '${isTl ? "Mababang Stock" : "Low Stock"} (${productProv.lowStockProducts.length})',
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+      DropdownMenuItem(
+        value: 'Expiry',
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.event_busy_rounded, size: 16, color: AppTheme.accentAmber),
+            const SizedBox(width: 6),
+            Flexible(
+              child: RichText(
+                overflow: TextOverflow.ellipsis,
+                text: TextSpan(
+                  style: dropdownStyle,
+                  text:
+                      '${isTl ? "Malapit Mag-expire" : "Near Expiry / Expired"} (${productProv.expiryProducts.length})',
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+      ...productProv.categories.where((c) => c != 'All').map((category) {
+        final (catColor, catIcon) = AppTheme.getCategoryStyle(category);
+        return DropdownMenuItem(
+          value: category,
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(catIcon, size: 16, color: catColor),
+              const SizedBox(width: 6),
+              Flexible(
+                child: RichText(
+                  overflow: TextOverflow.ellipsis,
+                  text: TextSpan(
+                    style: dropdownStyle,
+                    text: category,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      }),
+    ];
+
     return Scaffold(
       appBar: AppBar(
-        title: Text(
-          isTl ? 'Paninda' : 'Inventory',
-          style: const TextStyle(fontWeight: FontWeight.w900, letterSpacing: -0.3),
+        title: StoreHeaderTitle(
+          sectionTitle: isTl ? 'Paninda' : 'Inventory',
         ),
         actions: [
+          IconButton(
+            key: const Key('products_restock_receipt_btn'),
+            icon: const Icon(Icons.receipt_long_rounded),
+            tooltip: isTl ? 'Listahan ng Pamimili (Resibo)' : 'Printable Restock List',
+            onPressed: () {
+              HapticFeedback.lightImpact();
+              PrintableRestockReceiptSheet.show(context);
+            },
+          ),
           IconButton(
             key: const Key('products_scan_barcode_btn'),
             icon: const Icon(Icons.qr_code_scanner_rounded),
@@ -196,88 +301,112 @@ class _ProductsScreenState extends State<ProductsScreen> {
       ),
       body: Column(
         children: [
-          // Search & Low Stock Toggle
+          // Search & Unified Filter Row
           Padding(
             padding: const EdgeInsets.symmetric(
               horizontal: AppConstants.space16,
               vertical: 8,
             ),
-            child: Row(
+            child: Column(
               children: [
-                Expanded(
-                  child: TextField(
-                    controller: _searchCtrl,
-                    onChanged: productProv.setSearchQuery,
-                    decoration: InputDecoration(
-                      hintText: isTl ? 'Maghanap ng paninda o barcode...' : AppStrings.searchProductsHint,
-                      prefixIcon: const Icon(Icons.search_rounded),
-                      suffixIcon: _searchCtrl.text.isNotEmpty
-                          ? IconButton(
-                              icon: const Icon(Icons.clear),
-                              onPressed: () {
-                                _searchCtrl.clear();
-                                productProv.setSearchQuery('');
-                              },
-                            )
-                          : null,
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: _searchCtrl,
+                        onChanged: productProv.setSearchQuery,
+                        decoration: InputDecoration(
+                          hintText: isTl ? 'Maghanap ng paninda o barcode...' : AppStrings.searchProductsHint,
+                          prefixIcon: const Icon(Icons.search_rounded),
+                          suffixIcon: _searchCtrl.text.isNotEmpty
+                              ? IconButton(
+                                  icon: const Icon(Icons.clear),
+                                  onPressed: () {
+                                    _searchCtrl.clear();
+                                    productProv.setSearchQuery('');
+                                  },
+                                )
+                              : null,
+                        ),
+                      ),
                     ),
-                  ),
+                    const SizedBox(width: AppConstants.space8),
+                    FilterChip(
+                      label: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.warning_amber_rounded, size: 16),
+                          const SizedBox(width: 4),
+                          Text('${isTl ? "Mababa" : "Low Stock"} (${productProv.lowStockProducts.length})'),
+                        ],
+                      ),
+                      selected: productProv.filterLowStockOnly,
+                      selectedColor: AppTheme.dangerRed.withOpacity(0.18),
+                      onSelected: (_) {
+                        HapticFeedback.selectionClick();
+                        productProv.toggleLowStockFilter();
+                      },
+                    ),
+                  ],
                 ),
-                const SizedBox(width: AppConstants.space8),
-                FilterChip(
-                  label: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(Icons.warning_amber_rounded, size: 16),
-                      const SizedBox(width: 4),
-                      Text('${isTl ? "Mababa" : "Low Stock"} (${productProv.lowStockProducts.length})'),
-                    ],
-                  ),
-                  selected: productProv.filterLowStockOnly,
-                  selectedColor: AppTheme.dangerRed.withOpacity(0.18),
-                  onSelected: (_) {
-                    HapticFeedback.selectionClick();
-                    productProv.toggleLowStockFilter();
-                  },
+                const SizedBox(height: 8),
+                // Unified Filter Dropdown (All, Low Stock, Expiry, Categories) + Slide Hint
+                Row(
+                  children: [
+                    Expanded(
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: theme.colorScheme.surfaceContainerHighest.withOpacity(0.55),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: theme.colorScheme.outline.withOpacity(0.25),
+                          ),
+                        ),
+                        child: DropdownButtonHideUnderline(
+                          child: DropdownButton<String>(
+                            key: const Key('inventory_filter_dropdown'),
+                            value: dropdownItems.any((i) => i.value == productProv.activeDropdownFilter)
+                                ? productProv.activeDropdownFilter
+                                : 'All',
+                            isExpanded: true,
+                            isDense: true,
+                            icon: const Icon(Icons.arrow_drop_down_circle_outlined, size: 20),
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w700,
+                              color: theme.colorScheme.onSurface,
+                            ),
+                            items: dropdownItems,
+                            onChanged: (val) {
+                              if (val == null) return;
+                              HapticFeedback.selectionClick();
+                              productProv.applyDropdownFilter(val);
+                            },
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      isTl ? 'Diinan / i-slide pakaliwa para i-edit' : 'Hold/slide left to edit',
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontStyle: FontStyle.italic,
+                        color: theme.colorScheme.onSurface.withOpacity(0.5),
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
           ),
 
-          // Categories Horizontal Scroll
-          SizedBox(
-            height: 48,
-            child: ListView.separated(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: AppConstants.space16),
-              itemCount: productProv.categories.length,
-              separatorBuilder: (_, __) => const SizedBox(width: 8),
-              itemBuilder: (context, index) {
-                final category = productProv.categories[index];
-                final isSelected = productProv.selectedCategory == category;
-                final (catColor, catIcon) = category == 'All'
-                    ? (AppTheme.primaryGreen, Icons.grid_view_rounded)
-                    : AppTheme.getCategoryStyle(category);
-
-                return ChoiceChip(
-                  avatar: Icon(catIcon, size: 16, color: isSelected ? Colors.white : catColor),
-                  label: Text(category == 'All' ? (isTl ? 'Lahat' : 'All') : category),
-                  selected: isSelected,
-                  selectedColor: catColor,
-                  onSelected: (_) {
-                    HapticFeedback.selectionClick();
-                    productProv.setCategory(category);
-                  },
-                );
-              },
-            ),
-          ),
-
-          const SizedBox(height: 6),
-
-          // Product List
+          // Product List with 4-inch (120px) Pull-to-Refresh and Long-Press/Slide-Left Actions
           Expanded(
             child: RefreshIndicator(
+              displacement: 120.0,
+              strokeWidth: 3.0,
               onRefresh: () => productProv.loadProducts(),
               child: products.isEmpty
                   ? EmptyState(
@@ -288,6 +417,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
                           : 'Try changing your filter or searching for another item.',
                     )
                   : ListView.separated(
+                      physics: const AlwaysScrollableScrollPhysics(),
                       padding: const EdgeInsets.only(
                         left: AppConstants.space16,
                         right: AppConstants.space16,
@@ -301,13 +431,24 @@ class _ProductsScreenState extends State<ProductsScreen> {
                         final (catColor, catIcon) = AppTheme.getCategoryStyle(item.categoryName);
                         final isTingiMother = item.pieceProductId != null && (item.piecesPerPack ?? 0) > 0;
 
-                        return Card(
-                          clipBehavior: Clip.antiAlias,
-                          child: InkWell(
-                            onTap: () {
-                              HapticFeedback.selectionClick();
-                              ProductDetailSheet.show(context, item);
-                            },
+                        return SlideActionTile(
+                          key: ValueKey('product_slide_${item.id}'),
+                          editLabel: isTl ? 'I-edit' : 'Edit',
+                          deleteLabel: isTl ? 'I-delete' : 'Delete',
+                          onTap: () {
+                            HapticFeedback.selectionClick();
+                            ProductDetailSheet.show(context, item);
+                          },
+                          onEdit: () {
+                            HapticFeedback.lightImpact();
+                            AddEditProductSheet.show(context, product: item);
+                          },
+                          onDelete: () {
+                            HapticFeedback.lightImpact();
+                            _confirmDeleteProduct(context, item);
+                          },
+                          child: Card(
+                            clipBehavior: Clip.antiAlias,
                             child: Padding(
                               padding: const EdgeInsets.symmetric(
                                 horizontal: 12,
@@ -344,7 +485,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
                                   ),
                                   const SizedBox(width: 10),
 
-                                  // Product Info
+                                  // Product Info (Maximized horizontal space)
                                   Expanded(
                                     child: Column(
                                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -402,6 +543,22 @@ class _ProductsScreenState extends State<ProductsScreen> {
                                               stockQty: item.stockQty,
                                               lowStockLevel: item.lowStockLevel,
                                             ),
+                                            if (item.expiryDate != null && item.expiryDate!.trim().isNotEmpty)
+                                              Container(
+                                                padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+                                                decoration: BoxDecoration(
+                                                  color: AppTheme.accentAmber.withOpacity(0.15),
+                                                  borderRadius: BorderRadius.circular(4),
+                                                ),
+                                                child: Text(
+                                                  'Exp: ${item.expiryDate!.split("T").first}',
+                                                  style: const TextStyle(
+                                                    fontSize: 10,
+                                                    fontWeight: FontWeight.w700,
+                                                    color: AppTheme.accentAmber,
+                                                  ),
+                                                ),
+                                              ),
                                           ],
                                         ),
                                       ],
@@ -409,102 +566,46 @@ class _ProductsScreenState extends State<ProductsScreen> {
                                   ),
                                   const SizedBox(width: 8),
 
-                                  // Price & Actions (Restock, Edit, Delete)
+                                  // Price & Quick Restock Pill (Edit & Delete moved to Long-Press/Slide-Left)
                                   Column(
                                     crossAxisAlignment: CrossAxisAlignment.end,
                                     children: [
                                       PriceText(centavos: item.priceCents, fontSize: 16),
                                       const SizedBox(height: 4),
-                                      Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          // Quick Restock Pill
-                                          GestureDetector(
-                                            onTap: () {
-                                              HapticFeedback.lightImpact();
-                                              _showQuickRestock(context, item);
-                                            },
-                                            child: Container(
-                                              padding: const EdgeInsets.symmetric(
-                                                horizontal: 8,
-                                                vertical: 4,
-                                              ),
-                                              decoration: BoxDecoration(
-                                                color: AppTheme.primaryGreen.withOpacity(0.12),
-                                                borderRadius: BorderRadius.circular(6),
-                                              ),
-                                              child: const Row(
-                                                mainAxisSize: MainAxisSize.min,
-                                                children: [
-                                                  Icon(
-                                                    Icons.add_shopping_cart_rounded,
-                                                    size: 13,
-                                                    color: AppTheme.primaryGreen,
-                                                  ),
-                                                  SizedBox(width: 3),
-                                                  Text(
-                                                    'Restock',
-                                                    style: TextStyle(
-                                                      fontSize: 11,
-                                                      fontWeight: FontWeight.bold,
-                                                      color: AppTheme.primaryGreen,
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                            ),
+                                      GestureDetector(
+                                        onTap: () {
+                                          HapticFeedback.lightImpact();
+                                          _showQuickRestock(context, item);
+                                        },
+                                        child: Container(
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 8,
+                                            vertical: 4,
                                           ),
-                                          const SizedBox(width: 6),
-
-                                          // Direct Edit Button
-                                          Tooltip(
-                                            message: isTl ? 'I-edit' : 'Edit',
-                                            child: InkWell(
-                                              borderRadius: BorderRadius.circular(6),
-                                              onTap: () {
-                                                HapticFeedback.lightImpact();
-                                                AddEditProductSheet.show(context, product: item);
-                                              },
-                                              child: Container(
-                                                padding: const EdgeInsets.all(5),
-                                                decoration: BoxDecoration(
-                                                  color: AppTheme.accentBlue.withOpacity(0.12),
-                                                  borderRadius: BorderRadius.circular(6),
-                                                ),
-                                                child: const Icon(
-                                                  Icons.edit_outlined,
-                                                  size: 14,
-                                                  color: AppTheme.accentBlue,
+                                          decoration: BoxDecoration(
+                                            color: AppTheme.primaryGreen.withOpacity(0.12),
+                                            borderRadius: BorderRadius.circular(6),
+                                          ),
+                                          child: const Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              Icon(
+                                                Icons.add_shopping_cart_rounded,
+                                                size: 13,
+                                                color: AppTheme.primaryGreen,
+                                              ),
+                                              SizedBox(width: 3),
+                                              Text(
+                                                'Restock',
+                                                style: TextStyle(
+                                                  fontSize: 11,
+                                                  fontWeight: FontWeight.bold,
+                                                  color: AppTheme.primaryGreen,
                                                 ),
                                               ),
-                                            ),
+                                            ],
                                           ),
-                                          const SizedBox(width: 6),
-
-                                          // Direct Delete Button
-                                          Tooltip(
-                                            message: isTl ? 'I-delete' : 'Delete',
-                                            child: InkWell(
-                                              borderRadius: BorderRadius.circular(6),
-                                              onTap: () {
-                                                HapticFeedback.lightImpact();
-                                                _confirmDeleteProduct(context, item);
-                                              },
-                                              child: Container(
-                                                padding: const EdgeInsets.all(5),
-                                                decoration: BoxDecoration(
-                                                  color: AppTheme.dangerRed.withOpacity(0.12),
-                                                  borderRadius: BorderRadius.circular(6),
-                                                ),
-                                                child: const Icon(
-                                                  Icons.delete_outline_rounded,
-                                                  size: 14,
-                                                  color: AppTheme.dangerRed,
-                                                ),
-                                              ),
-                                            ),
-                                          ),
-                                        ],
+                                        ),
                                       ),
                                     ],
                                   ),

@@ -58,7 +58,7 @@ class SaleCalculator {
   }) {
     if (customer == null) return false;
     final limit = customer.creditLimitCents;
-    if (limit == null || limit <= 0) return false;
+    if (limit <= 0) return false;
     return (customer.balanceCents + saleTotalCents) > limit;
   }
 }

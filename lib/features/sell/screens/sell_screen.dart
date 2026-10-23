@@ -11,6 +11,7 @@ import '../../../shared/widgets/stock_badge.dart';
 import '../../../shared/widgets/empty_state.dart';
 import '../../../shared/widgets/barcode_scanner_sheet.dart';
 import '../../../shared/widgets/product_image_thumbnail.dart';
+import '../../../shared/widgets/store_header_title.dart';
 import '../../products/providers/product_provider.dart';
 import '../../products/widgets/add_edit_product_sheet.dart';
 import '../../utang/providers/utang_provider.dart';
@@ -38,7 +39,9 @@ class _SellScreenState extends State<SellScreen> {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (ctx) => const _CartBottomSheetContent(),
+      builder: (ctx) => _CartBottomSheetContent(
+        onScanMore: () => _handleBarcodeScan(context),
+      ),
     );
   }
 
@@ -75,6 +78,8 @@ class _SellScreenState extends State<SellScreen> {
             duration: const Duration(milliseconds: 1500),
           ),
         );
+        // Automatically open Cart / Complete Transaction sheet upon barcode scan
+        _showCartBottomSheet(context);
       } else if (cartProv.errorMessage != null) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -123,9 +128,8 @@ class _SellScreenState extends State<SellScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(
-          isTl ? 'Benta' : 'Sell',
-          style: const TextStyle(fontWeight: FontWeight.bold),
+        title: StoreHeaderTitle(
+          sectionTitle: isTl ? 'Benta' : 'Sell',
         ),
         actions: [
           IconButton(
@@ -182,38 +186,53 @@ class _SellScreenState extends State<SellScreen> {
           ),
         ),
       ),
-      body: products.isEmpty
-          ? EmptyState(
-              icon: Icons.inventory_2_outlined,
-              title: isTl ? 'Walang katugmang produkto' : 'No products match',
-              description: isTl
-                  ? 'Subukang mag-type ng ibang salita o suriin ang kategorya.'
-                  : 'Try searching another keyword or check category filters.',
-              actionLabel: isTl ? 'Burahin ang Paghahanap' : 'Clear Search',
-              onAction: () {
-                _searchCtrl.clear();
-                productProv.setSearchQuery('');
-              },
-            )
-          : GridView.builder(
-              padding: const EdgeInsets.fromLTRB(
-                AppConstants.space16,
-                AppConstants.space12,
-                AppConstants.space16,
-                100, // Extra space for floating cart bar
+      body: RefreshIndicator(
+        displacement: 120.0,
+        edgeOffset: 12.0,
+        onRefresh: () async {
+          HapticFeedback.mediumImpact();
+          await productProv.loadProducts();
+        },
+        child: products.isEmpty
+            ? SingleChildScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                child: SizedBox(
+                  height: MediaQuery.of(context).size.height * 0.55,
+                  child: EmptyState(
+                    icon: Icons.inventory_2_outlined,
+                    title: isTl ? 'Walang katugmang produkto' : 'No products match',
+                    description: isTl
+                        ? 'Subukang mag-type ng ibang salita o suriin ang kategorya.'
+                        : 'Try searching another keyword or check category filters.',
+                    actionLabel: isTl ? 'Burahin ang Paghahanap' : 'Clear Search',
+                    onAction: () {
+                      _searchCtrl.clear();
+                      productProv.setSearchQuery('');
+                    },
+                  ),
+                ),
+              )
+            : GridView.builder(
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: const EdgeInsets.fromLTRB(
+                  AppConstants.space16,
+                  AppConstants.space12,
+                  AppConstants.space16,
+                  100, // Extra space for floating cart bar
+                ),
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 2,
+                  crossAxisSpacing: AppConstants.space12,
+                  mainAxisSpacing: AppConstants.space12,
+                  childAspectRatio: 0.95,
+                ),
+                itemCount: products.length,
+                itemBuilder: (context, index) {
+                  final product = products[index];
+                  return _ProductGridTile(product: product);
+                },
               ),
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
-                crossAxisSpacing: AppConstants.space12,
-                mainAxisSpacing: AppConstants.space12,
-                childAspectRatio: 0.95,
-              ),
-              itemCount: products.length,
-              itemBuilder: (context, index) {
-                final product = products[index];
-                return _ProductGridTile(product: product);
-              },
-            ),
+      ),
       bottomSheet: cartProv.items.isNotEmpty
           ? _FloatingCartBar(onTap: () => _showCartBottomSheet(context))
           : null,
@@ -526,7 +545,9 @@ class _FloatingCartBar extends StatelessWidget {
 }
 
 class _CartBottomSheetContent extends StatelessWidget {
-  const _CartBottomSheetContent();
+  final VoidCallback? onScanMore;
+
+  const _CartBottomSheetContent({this.onScanMore});
 
   void _openPaymentSheet(BuildContext context) {
     showModalBottomSheet(
@@ -576,6 +597,15 @@ class _CartBottomSheetContent extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
+                if (onScanMore != null)
+                  TextButton.icon(
+                    onPressed: () {
+                      Navigator.pop(context);
+                      onScanMore!();
+                    },
+                    icon: const Icon(Icons.qr_code_scanner_rounded, size: 17),
+                    label: Text(isTl ? 'I-scan' : 'Scan More'),
+                  ),
                 TextButton.icon(
                   onPressed: cartProv.clearCart,
                   icon: const Icon(Icons.delete_outline, size: 18, color: Colors.red),

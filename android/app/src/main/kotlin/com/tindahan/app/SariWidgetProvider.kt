@@ -36,29 +36,33 @@ class SariWidgetProvider : HomeWidgetProvider() {
                 setTextViewText(R.id.widget_low_stock, lowStock)
                 setTextViewText(R.id.widget_last_updated, lastUpdated)
 
-                // Body click -> Open app
-                val rootIntent = HomeWidgetLaunchIntent.getActivity(
-                    context,
-                    MainActivity::class.java,
-                    Uri.parse("tindahan://home"),
-                )
-                setOnClickPendingIntent(R.id.widget_root, rootIntent)
+                try {
+                    // Body click -> Open app
+                    val rootIntent = HomeWidgetLaunchIntent.getActivity(
+                        context,
+                        MainActivity::class.java,
+                        Uri.parse("tindahan://home"),
+                    )
+                    setOnClickPendingIntent(R.id.widget_root, rootIntent)
 
-                // Quick action: Sell
-                val sellIntent = HomeWidgetLaunchIntent.getActivity(
-                    context,
-                    MainActivity::class.java,
-                    Uri.parse("tindahan://sell"),
-                )
-                setOnClickPendingIntent(R.id.widget_btn_sell, sellIntent)
+                    // Quick action: Sell
+                    val sellIntent = HomeWidgetLaunchIntent.getActivity(
+                        context,
+                        MainActivity::class.java,
+                        Uri.parse("tindahan://sell"),
+                    )
+                    setOnClickPendingIntent(R.id.widget_btn_sell, sellIntent)
 
-                // Quick action: Scan barcode
-                val scanIntent = HomeWidgetLaunchIntent.getActivity(
-                    context,
-                    MainActivity::class.java,
-                    Uri.parse("tindahan://scan"),
-                )
-                setOnClickPendingIntent(R.id.widget_btn_scan, scanIntent)
+                    // Quick action: Scan barcode
+                    val scanIntent = HomeWidgetLaunchIntent.getActivity(
+                        context,
+                        MainActivity::class.java,
+                        Uri.parse("tindahan://scan"),
+                    )
+                    setOnClickPendingIntent(R.id.widget_btn_scan, scanIntent)
+                } catch (_: Exception) {
+                    // Safe fallback so widget still renders metrics even if intent resolution fails
+                }
             }
 
             appWidgetManager.updateAppWidget(widgetId, views)

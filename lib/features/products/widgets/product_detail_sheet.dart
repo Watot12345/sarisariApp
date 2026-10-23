@@ -97,15 +97,18 @@ class ProductDetailSheet extends StatelessWidget {
                         ? CurrencyFormatter.parsePesosToCentavos(costCtrl.text)
                         : null;
                     HapticFeedback.mediumImpact();
+                    final navDialog = Navigator.of(dialogCtx);
+                    final navSheet = Navigator.of(context);
+                    final sm = ScaffoldMessenger.of(context);
                     await context.read<ProductProvider>().restockProduct(
                           product.id,
                           addQty,
                           unitCostCents: newCost,
                           note: 'Counter Restock +$addQty',
                         );
-                    Navigator.pop(dialogCtx);
-                    Navigator.pop(context); // close sheet to refresh
-                    ScaffoldMessenger.of(context).showSnackBar(
+                    navDialog.pop();
+                    navSheet.pop(); // close sheet to refresh
+                    sm.showSnackBar(
                       SnackBar(
                         content: Text(
                           isTl
@@ -130,7 +133,6 @@ class ProductDetailSheet extends StatelessWidget {
     int targetQty = product.stockQty;
     final isTl = context.read<LanguageProvider?>()?.isTagalog ?? false;
     String reason = isTl ? 'Recount (Aktwal na bilang)' : 'Recount (Physical Count)';
-    final noteCtrl = TextEditingController();
 
     showDialog(
       context: context,
@@ -204,14 +206,17 @@ class ProductDetailSheet extends StatelessWidget {
                   ),
                   onPressed: () async {
                     HapticFeedback.mediumImpact();
+                    final navDialog = Navigator.of(dialogCtx);
+                    final navSheet = Navigator.of(context);
+                    final sm = ScaffoldMessenger.of(context);
                     await context.read<ProductProvider>().adjustStock(
                           product.id,
                           targetQty,
                           reason: reason,
                         );
-                    Navigator.pop(dialogCtx);
-                    Navigator.pop(context);
-                    ScaffoldMessenger.of(context).showSnackBar(
+                    navDialog.pop();
+                    navSheet.pop();
+                    sm.showSnackBar(
                       SnackBar(
                         content: Text(
                           isTl
@@ -256,10 +261,13 @@ class ProductDetailSheet extends StatelessWidget {
             ),
             onPressed: () async {
               HapticFeedback.heavyImpact();
+              final navDialog = Navigator.of(dialogCtx);
+              final navSheet = Navigator.of(context);
+              final sm = ScaffoldMessenger.of(context);
               await context.read<ProductProvider>().deleteProduct(product.id);
-              Navigator.pop(dialogCtx);
-              Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
+              navDialog.pop();
+              navSheet.pop();
+              sm.showSnackBar(
                 SnackBar(
                   content: Text(
                     isTl
@@ -549,11 +557,13 @@ class ProductDetailSheet extends StatelessWidget {
                           ? null
                           : () async {
                               HapticFeedback.heavyImpact();
+                              final navSheet = Navigator.of(context);
+                              final sm = ScaffoldMessenger.of(context);
                               await context
                                   .read<ProductProvider>()
                                   .breakPack(product.id);
-                              Navigator.pop(context);
-                              ScaffoldMessenger.of(context).showSnackBar(
+                              navSheet.pop();
+                              sm.showSnackBar(
                                 SnackBar(
                                   content: Text(
                                     isTl

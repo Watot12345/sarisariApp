@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../constants.dart';
 
 /// Ultra High-Definition Material 3 Theme definitions for Tindahan.
 /// Styled with lush Filipino emeralds, warm amber, obsidian darks, and crisp glass surfaces.
@@ -58,8 +57,40 @@ class AppTheme {
     }
   }
 
+  /// Returns customized container surface and border color based on user's selected container theme preset.
+  static (Color, Color) getCustomContainerStyle(String preset, {required bool isDark}) {
+    switch (preset) {
+      case 'emerald':
+        return isDark
+            ? (const Color(0xFF0E2923), const Color(0xFF10B981).withOpacity(0.35))
+            : (const Color(0xFFECFDF5), const Color(0xFF6EE7B7));
+      case 'blue':
+        return isDark
+            ? (const Color(0xFF112240), const Color(0xFF3B82F6).withOpacity(0.35))
+            : (const Color(0xFFEFF6FF), const Color(0xFF93C5FD));
+      case 'purple':
+        return isDark
+            ? (const Color(0xFF22153B), const Color(0xFF8B5CF6).withOpacity(0.35))
+            : (const Color(0xFFF5F3FF), const Color(0xFFC4B5FD));
+      case 'amber':
+        return isDark
+            ? (const Color(0xFF2B1F11), const Color(0xFFF59E0B).withOpacity(0.35))
+            : (const Color(0xFFFFFBEB), const Color(0xFFFCD34D));
+      case 'rose':
+        return isDark
+            ? (const Color(0xFF2D1420), const Color(0xFFF43F5E).withOpacity(0.35))
+            : (const Color(0xFFFFF1F2), const Color(0xFFFDA4AF));
+      default:
+        return isDark ? (cardDark, borderDark) : (cardLight, borderLight);
+    }
+  }
+
   /// Light Theme Definition (HD)
-  static ThemeData get lightTheme {
+  static ThemeData get lightTheme => getLightTheme('default');
+
+  static ThemeData getLightTheme(String containerPreset) {
+    final (customCardColor, customBorderColor) =
+        getCustomContainerStyle(containerPreset, isDark: false);
     final colorScheme = ColorScheme.light(
       primary: primaryGreen,
       onPrimary: Colors.white,
@@ -71,8 +102,8 @@ class AppTheme {
       onError: Colors.white,
       surface: bgLight,
       onSurface: textDark,
-      surfaceContainerHighest: const Color(0xFFF1F5F9),
-      outline: borderLight,
+      surfaceContainerHighest: customCardColor,
+      outline: customBorderColor,
     );
 
     return ThemeData(
@@ -80,11 +111,11 @@ class AppTheme {
       colorScheme: colorScheme,
       scaffoldBackgroundColor: bgLight,
       cardTheme: CardThemeData(
-        color: cardLight,
+        color: customCardColor,
         elevation: 0,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
-          side: const BorderSide(color: borderLight, width: 1),
+          side: BorderSide(color: customBorderColor, width: 1),
         ),
         margin: EdgeInsets.zero,
       ),
@@ -137,11 +168,11 @@ class AppTheme {
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide: const BorderSide(color: borderLight),
+          borderSide: BorderSide(color: customBorderColor),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide: const BorderSide(color: borderLight),
+          borderSide: BorderSide(color: customBorderColor),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
@@ -164,7 +195,11 @@ class AppTheme {
   }
 
   /// Dark Theme Definition (Obsidian HD)
-  static ThemeData get darkTheme {
+  static ThemeData get darkTheme => getDarkTheme('default');
+
+  static ThemeData getDarkTheme(String containerPreset) {
+    final (customCardColor, customBorderColor) =
+        getCustomContainerStyle(containerPreset, isDark: true);
     final colorScheme = ColorScheme.dark(
       primary: primaryGreenDark,
       onPrimary: const Color(0xFF042F2C),
@@ -176,8 +211,8 @@ class AppTheme {
       onError: Colors.black,
       surface: bgDark,
       onSurface: textLight,
-      surfaceContainerHighest: cardDark,
-      outline: borderDark,
+      surfaceContainerHighest: customCardColor,
+      outline: customBorderColor,
     );
 
     return ThemeData(
@@ -185,11 +220,11 @@ class AppTheme {
       colorScheme: colorScheme,
       scaffoldBackgroundColor: bgDark,
       cardTheme: CardThemeData(
-        color: cardDark,
+        color: customCardColor,
         elevation: 0,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
-          side: const BorderSide(color: borderDark, width: 1),
+          side: BorderSide(color: customBorderColor, width: 1),
         ),
         margin: EdgeInsets.zero,
       ),

@@ -6,7 +6,8 @@ class AppConstants {
 
   // App Metadata
   static const String appName = 'SariMe';
-  static const String appVersion = '1.0.0';
+  static const String appVersion = '1.0.1';
+  static const String defaultStoreName = 'My Sari-Sari Store';
 
   // Distribution & Release URLs (100% Free via GitHub Releases & GitHub Pages)
   static const String githubRepo = 'Watot12345/sarisariApp';

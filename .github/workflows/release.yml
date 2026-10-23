@@ -7,9 +7,9 @@ on:
   workflow_dispatch:
     inputs:
       release_tag:
-        description: 'Release version tag (e.g. v1.0.0, v1.0.1)'
+        description: 'Release version tag (e.g. v1.0.1)'
         required: false
-        default: 'v1.0.0'
+        default: 'v1.0.1'
       prerelease:
         description: 'Mark as pre-release?'
         type: boolean
@@ -48,22 +48,27 @@ jobs:
       - name: Run Tests
         run: flutter test --concurrency=1
 
-      - name: Build Universal Release APK
-        run: flutter build apk --release
+      - name: Build Split & Universal Release APKs
+        run: |
+          flutter build apk --release --split-per-abi
+          flutter build apk --release
 
       - name: Prepare Release Artifacts
         id: prep
         run: |
           RAW_TAG="${{ github.event.inputs.release_tag || github.ref_name }}"
           if [ -z "$RAW_TAG" ] || [ "$RAW_TAG" = "main" ] || [ "$RAW_TAG" = "master" ]; then
-            RAW_TAG="v1.0.0"
+            RAW_TAG="v1.0.1"
           fi
           echo "RESOLVED_TAG=$RAW_TAG" >> $GITHUB_ENV
 
           mkdir -p release-artifacts
-          # Provide both versioned filename and static latest filename
-          cp build/app/outputs/flutter-apk/app-release.apk release-artifacts/SariMe-$RAW_TAG.apk
-          cp build/app/outputs/flutter-apk/app-release.apk release-artifacts/app-release.apk
+          # Primary lightweight APK (~25 MB) optimized for modern Android phones
+          cp build/app/outputs/flutter-apk/app-arm64-v8a-release.apk release-artifacts/app-release.apk
+          cp build/app/outputs/flutter-apk/app-arm64-v8a-release.apk release-artifacts/SariMe-$RAW_TAG-arm64-v8a.apk
+          cp build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk release-artifacts/SariMe-$RAW_TAG-armeabi-v7a.apk
+          # Universal fallback APK
+          cp build/app/outputs/flutter-apk/app-release.apk release-artifacts/SariMe-$RAW_TAG-universal.apk
           echo "Generated APK artifacts:"
           ls -lh release-artifacts/
 

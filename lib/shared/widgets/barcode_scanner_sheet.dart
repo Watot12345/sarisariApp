@@ -2,6 +2,7 @@ import 'dart:io' show Platform;
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:provider/provider.dart';
 import '../../core/constants.dart';
@@ -10,7 +11,8 @@ import '../../core/strings.dart';
 import '../../core/theme/app_theme.dart';
 
 /// Reusable Barcode Scanner modal bottom sheet with live camera viewfinder,
-/// flashlight/torch toggle, and manual barcode input fallback.
+/// camera photo barcode extraction (ImagePicker + analyzeImage), flashlight toggle,
+/// and manual barcode input fallback.
 class BarcodeScannerSheet extends StatefulWidget {
   final String title;
 
@@ -37,9 +39,11 @@ class BarcodeScannerSheet extends StatefulWidget {
 
 class _BarcodeScannerSheetState extends State<BarcodeScannerSheet> {
   final TextEditingController _manualCtrl = TextEditingController();
+  final ImagePicker _imagePicker = ImagePicker();
   MobileScannerController? _scannerController;
   bool _isTorchOn = false;
   bool _hasPopped = false;
+  bool _isAnalyzingPhoto = false;
   String? _inputError;
 
   static bool get _supportsLiveCamera {
@@ -57,7 +61,8 @@ class _BarcodeScannerSheetState extends State<BarcodeScannerSheet> {
     super.initState();
     if (_supportsLiveCamera) {
       _scannerController = MobileScannerController(
-        detectionSpeed: DetectionSpeed.noDuplicates,
+        detectionSpeed: DetectionSpeed.normal,
+        facing: CameraFacing.back,
       );
     }
   }
@@ -75,6 +80,76 @@ class _BarcodeScannerSheetState extends State<BarcodeScannerSheet> {
       _isTorchOn = !_isTorchOn;
     });
     _scannerController?.toggleTorch();
+  }
+
+  Future<void> _retryLiveCamera() async {
+    HapticFeedback.selectionClick();
+    try {
+      await _scannerController?.stop();
+      await _scannerController?.start();
+      if (mounted) setState(() => _inputError = null);
+    } catch (_) {}
+  }
+
+  /// Captures a photo using the native system camera (ImagePicker) and extracts
+  /// the barcode from the image file via MobileScannerController.analyzeImage.
+  Future<void> _scanFromCameraPhoto({ImageSource source = ImageSource.camera}) async {
+    if (_isAnalyzingPhoto) return;
+    HapticFeedback.selectionClick();
+    final isTl = context.read<LanguageProvider?>()?.isTagalog ?? false;
+
+    setState(() {
+      _isAnalyzingPhoto = true;
+      _inputError = null;
+    });
+
+    try {
+      final XFile? picked = await _imagePicker.pickImage(
+        source: source,
+        maxWidth: 1600,
+        maxHeight: 1600,
+        imageQuality: 90,
+      );
+
+      if (picked == null) {
+        if (mounted) setState(() => _isAnalyzingPhoto = false);
+        return;
+      }
+
+      final controller = _scannerController ?? MobileScannerController();
+      final BarcodeCapture? capture = await controller.analyzeImage(picked.path);
+      if (_scannerController == null) {
+        controller.dispose();
+      }
+
+      if (!mounted) return;
+      setState(() => _isAnalyzingPhoto = false);
+
+      if (capture != null && capture.barcodes.isNotEmpty) {
+        for (final barcode in capture.barcodes) {
+          final val = barcode.rawValue;
+          if (val != null && val.trim().isNotEmpty) {
+            _submitBarcode(val);
+            return;
+          }
+        }
+      }
+
+      setState(() {
+        _inputError = isTl
+            ? 'Walang nabasang barcode sa litrato. Ilapit ang camera sa barcode o i-type sa ibaba.'
+            : 'No barcode detected in photo. Try holding camera closer or enter manually below.';
+      });
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isAnalyzingPhoto = false;
+          _inputError = isTl
+              ? 'Hindi mabasa ang litrato ng barcode. Gamitin ang manual entry sa ibaba.'
+              : 'Could not analyze barcode photo. Please use manual entry below.';
+        });
+      }
+    }
   }
 
   void _submitBarcode(String rawCode) {
@@ -164,7 +239,7 @@ class _BarcodeScannerSheetState extends State<BarcodeScannerSheet> {
 
               // Camera Viewfinder Box
               Container(
-                height: 200,
+                height: 210,
                 clipBehavior: Clip.antiAlias,
                 decoration: BoxDecoration(
                   color: const Color(0xFF0F172A),
@@ -185,30 +260,69 @@ class _BarcodeScannerSheetState extends State<BarcodeScannerSheet> {
                         errorBuilder: (context, error, child) {
                           return Center(
                             child: Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 16),
+                              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                               child: Column(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
                                   const Icon(
-                                    Icons.no_photography_rounded,
+                                    Icons.camera_enhance_rounded,
                                     color: Colors.orangeAccent,
-                                    size: 40,
+                                    size: 32,
                                   ),
-                                  const SizedBox(height: 8),
+                                  const SizedBox(height: 6),
                                   Text(
                                     error.errorCode == MobileScannerErrorCode.permissionDenied
                                         ? (isTl
-                                            ? 'Kailangan ang pahintulot sa camera para makapag-scan ng barcode.\nMagbigay ng pahintulot sa Settings, o gamitin ang manual entry sa ibaba.'
-                                            : 'Camera permission is required to scan barcodes.\nPlease grant permission in App Settings, or use manual entry below.')
+                                            ? 'Kailangan ang pahintulot sa camera. Maaari mo ring kunan ng litrato ang barcode:'
+                                            : 'Camera permission needed. You can also snap a photo of the barcode:')
                                         : (isTl
-                                            ? 'Hindi magamit ang camera preview.\nGamitin ang manual entry ng barcode sa ibaba.'
-                                            : 'Camera preview unavailable.\nPlease use manual barcode entry below.'),
+                                            ? 'Hindi mabuksan ang live preview. Kunan ng litrato ang barcode gamit ang Camera:'
+                                            : 'Live preview unavailable. Snap a photo with your Camera to scan barcode:'),
                                     textAlign: TextAlign.center,
                                     style: const TextStyle(
                                       color: Colors.white,
-                                      fontSize: 12,
+                                      fontSize: 11.5,
                                       fontWeight: FontWeight.w500,
                                     ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Wrap(
+                                    spacing: 8,
+                                    runSpacing: 6,
+                                    alignment: WrapAlignment.center,
+                                    children: [
+                                      ElevatedButton.icon(
+                                        key: const Key('scanner_camera_photo_fallback_btn'),
+                                        onPressed: _isAnalyzingPhoto
+                                            ? null
+                                            : () => _scanFromCameraPhoto(source: ImageSource.camera),
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: AppTheme.primaryGreen,
+                                          foregroundColor: Colors.white,
+                                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                          minimumSize: const Size(0, 34),
+                                        ),
+                                        icon: const Icon(Icons.camera_alt_rounded, size: 15),
+                                        label: Text(
+                                          isTl ? 'Gamitin ang Camera' : 'Use Camera Photo',
+                                          style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.bold),
+                                        ),
+                                      ),
+                                      OutlinedButton.icon(
+                                        onPressed: _retryLiveCamera,
+                                        style: OutlinedButton.styleFrom(
+                                          foregroundColor: Colors.white,
+                                          side: const BorderSide(color: Colors.white54),
+                                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                          minimumSize: const Size(0, 34),
+                                        ),
+                                        icon: const Icon(Icons.refresh_rounded, size: 15),
+                                        label: Text(
+                                          isTl ? 'Subukan Ulit' : 'Retry',
+                                          style: const TextStyle(fontSize: 11.5),
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ],
                               ),
@@ -268,7 +382,46 @@ class _BarcodeScannerSheetState extends State<BarcodeScannerSheet> {
                 ),
               ),
 
-              const SizedBox(height: 16),
+              const SizedBox(height: 10),
+
+              // Quick Camera Photo & Gallery Barcode Extraction Row
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      key: const Key('scan_from_camera_photo_btn'),
+                      onPressed: _isAnalyzingPhoto
+                          ? null
+                          : () => _scanFromCameraPhoto(source: ImageSource.camera),
+                      icon: _isAnalyzingPhoto
+                          ? const SizedBox(
+                              width: 14,
+                              height: 14,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : const Icon(Icons.camera_alt_rounded, size: 17),
+                      label: Text(
+                        isTl ? 'Kunan sa Camera' : 'Snap Barcode Photo',
+                        style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  OutlinedButton.icon(
+                    key: const Key('scan_from_gallery_photo_btn'),
+                    onPressed: _isAnalyzingPhoto
+                        ? null
+                        : () => _scanFromCameraPhoto(source: ImageSource.gallery),
+                    icon: const Icon(Icons.image_search_rounded, size: 17),
+                    label: Text(
+                      isTl ? 'Mula sa Litrato' : 'From Image',
+                      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
+                    ),
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: 12),
 
               // Manual Entry Fallback Section
               Text(

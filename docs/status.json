@@ -1,5 +1,5 @@
 {
-  "latest_version": "1.0.0",
+  "latest_version": "1.0.1",
   "min_required_version": "1.0.0",
   "force_update": false,
   "download_url": "https://github.com/Watot12345/sarisariApp/releases/latest/download/app-release.apk",
@@ -9,11 +9,11 @@
   "maintenance_message": "SariMe is temporarily unavailable while we deploy an important system update. All your store products, sales, and utang records are 100% safe on your phone.",
   "maintenance_message_tl": "Pansamantalang hindi magagamit ang SariMe habang naglalagay kami ng mahalagang update. Ligtas at buo ang lahat ng iyong paninda, benta, at listahan ng utang sa iyong telepono.",
   "announcement": {
-    "id": "v1.0.0-launch",
-    "active": false,
-    "title": "Welcome to SariMe v1.0.0!",
-    "title_tl": "Maligayang Pagdating sa SariMe v1.0.0!",
-    "message": "Thank you for using SariMe! You can check for new APK updates anytime in Settings > Check for Updates.",
-    "message_tl": "Salamat sa paggamit ng SariMe! Maaari kang mag-check ng bagong APK update anumang oras sa Settings > Check for Updates."
+    "id": "v1.0.1-release",
+    "active": true,
+    "title": "SariMe v1.0.1 Released!",
+    "title_tl": "Inilabas na ang SariMe v1.0.1!",
+    "message": "Enjoy new Net Worth Streaks, Activity Logs audit trail, camera photo barcode scanner, printable thermal restock receipts, and refreshed branding!",
+    "message_tl": "Tangkilikin ang bagong Net Worth Streaks, talaan ng Activity Logs, photo barcode scanner gamit ang camera, resibo ng panindang bibilhin, at pinagandang disenyo!"
   }
 }

@@ -1,12 +1,17 @@
 import 'package:sqflite/sqflite.dart';
 import '../../core/exceptions.dart';
+import '../../core/utils/currency_formatter.dart';
 import '../db/app_database.dart';
 import '../models/category.dart';
 import '../models/product.dart';
+import 'activity_log_repository.dart';
 
 class ProductRepository {
   final AppDatabase _appDb;
-  ProductRepository([AppDatabase? appDb]) : _appDb = appDb ?? AppDatabase.instance;
+  final ActivityLogRepository _activityRepo;
+  ProductRepository([AppDatabase? appDb])
+      : _appDb = appDb ?? AppDatabase.instance,
+        _activityRepo = ActivityLogRepository(appDb);
 
   Future<Database> get _db async => await _appDb.database;
 
@@ -96,6 +101,12 @@ class ProductRepository {
           'created_at': now,
         });
       }
+      await _activityRepo.logActivity(
+        actionType: 'product_added',
+        title: 'Added Product: ${product.name}',
+        description: 'Price: ${CurrencyFormatter.format(product.priceCents)} • Initial Stock: ${product.stockQty}',
+        txn: txn,
+      );
       return id;
     });
   }
@@ -138,17 +149,30 @@ class ProductRepository {
           'created_at': now,
         });
       }
+
+      await _activityRepo.logActivity(
+        actionType: 'product_edited',
+        title: 'Updated Product: ${product.name}',
+        description: 'Price: ${CurrencyFormatter.format(product.priceCents)} • Stock: ${product.stockQty}',
+        txn: txn,
+      );
     });
   }
 
   Future<void> softDeleteProduct(int id) async {
     final db = await _db;
+    final prod = await getProductById(id);
     final now = DateTime.now().toUtc().toIso8601String();
     await db.update(
       'products',
       {'is_active': 0, 'updated_at': now},
       where: 'id = ?',
       whereArgs: [id],
+    );
+    await _activityRepo.logActivity(
+      actionType: 'product_deleted',
+      title: 'Deleted Product: ${prod?.name ?? '#$id'}',
+      description: 'Removed product from active store catalog',
     );
   }
 

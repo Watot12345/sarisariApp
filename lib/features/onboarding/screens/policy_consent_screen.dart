@@ -15,9 +15,43 @@ class PolicyConsentScreen extends StatefulWidget {
 }
 
 class _PolicyConsentScreenState extends State<PolicyConsentScreen> {
+  final ScrollController _scrollController = ScrollController();
+  bool _hasScrolledToBottom = false;
   bool _agreed = false;
 
+  @override
+  void initState() {
+    super.initState();
+    _scrollController.addListener(_onScroll);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _checkIfAlreadyAtBottom();
+    });
+  }
+
+  void _checkIfAlreadyAtBottom() {
+    if (!mounted || !_scrollController.hasClients) return;
+    if (_scrollController.position.maxScrollExtent <= 20) {
+      setState(() => _hasScrolledToBottom = true);
+    }
+  }
+
+  void _onScroll() {
+    if (!_scrollController.hasClients || _hasScrolledToBottom) return;
+    final pos = _scrollController.position;
+    if (pos.pixels >= pos.maxScrollExtent - 24) {
+      setState(() => _hasScrolledToBottom = true);
+    }
+  }
+
+  @override
+  void dispose() {
+    _scrollController.removeListener(_onScroll);
+    _scrollController.dispose();
+    super.dispose();
+  }
+
   void _showFullPolicyDialog(BuildContext context, {required bool isTl}) {
+    final dialogScrollCtrl = ScrollController();
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -35,6 +69,7 @@ class _PolicyConsentScreenState extends State<PolicyConsentScreen> {
           ],
         ),
         content: SingleChildScrollView(
+          controller: dialogScrollCtrl,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -46,7 +81,7 @@ class _PolicyConsentScreenState extends State<PolicyConsentScreen> {
               Text(
                 isTl
                     ? 'Lahat ng detalye ng iyong tindahan, paninda, benta, at listahan ng utang ay naka-save lamang sa lokal na SQLite database sa iyong telepono. Walang personal o pinansyal na data ng tindahan ang kinokolekta o ipinapadala sa anumang server.'
-                    : 'All store inventory, sales transactions, profit reports, and customer utang records are stored locally in an on-device SQLite database. Zero store or customer data is collected or transmitted to external servers.',
+                    : 'All store inventory, sales transactions, profit reports, and customer credit ledger records are stored locally in an on-device SQLite database. Zero store or customer data is collected or transmitted to external servers.',
                 style: const TextStyle(fontSize: 12),
               ),
               const SizedBox(height: 12),
@@ -102,7 +137,10 @@ class _PolicyConsentScreenState extends State<PolicyConsentScreen> {
         ),
         actions: [
           ElevatedButton(
-            onPressed: () => Navigator.pop(ctx),
+            onPressed: () {
+              if (mounted) setState(() => _hasScrolledToBottom = true);
+              Navigator.pop(ctx);
+            },
             style: ElevatedButton.styleFrom(
               backgroundColor: AppTheme.primaryGreen,
               foregroundColor: Colors.white,
@@ -126,6 +164,7 @@ class _PolicyConsentScreenState extends State<PolicyConsentScreen> {
       backgroundColor: theme.scaffoldBackgroundColor,
       body: SafeArea(
         child: SingleChildScrollView(
+          controller: _scrollController,
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -337,7 +376,48 @@ class _PolicyConsentScreenState extends State<PolicyConsentScreen> {
 
               const SizedBox(height: 8),
 
-              // Agreement Checkbox
+              // Scroll-down prompt if not yet at bottom
+              if (!_hasScrolledToBottom && !_agreed)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(10),
+                    onTap: () {
+                      if (_scrollController.hasClients) {
+                        _scrollController.animateTo(
+                          _scrollController.position.maxScrollExtent,
+                          duration: const Duration(milliseconds: 350),
+                          curve: Curves.easeOut,
+                        );
+                      }
+                      setState(() => _hasScrolledToBottom = true);
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: AppTheme.accentAmber.withOpacity(0.14),
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(color: AppTheme.accentAmber.withOpacity(0.4)),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.arrow_downward_rounded, size: 16, color: AppTheme.accentAmber),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              isTl
+                                  ? 'Mag-scroll pababa hanggang dulo para ma-check ang pagsang-ayon.'
+                                  : 'Scroll down to the bottom first to enable the agreement checkbox.',
+                              style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.w700),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+
+              // Agreement Checkbox (Disabled before scroll-to-bottom AND locked/disabled after checking)
               Container(
                 decoration: BoxDecoration(
                   color: isDark ? const Color(0xFF1A2438) : const Color(0xFFF1F5F9),
@@ -357,15 +437,33 @@ class _PolicyConsentScreenState extends State<PolicyConsentScreen> {
                       isTl
                           ? 'Nauunawaan at tinatanggap ko ang Patakaran sa Privacy at Offline Terms ng SariMe.'
                           : 'I understand and accept the SariMe Privacy Policy and Offline Terms.',
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.bold,
+                        color: (!_hasScrolledToBottom && !_agreed)
+                            ? theme.colorScheme.onSurface.withOpacity(0.45)
+                            : null,
                       ),
                     ),
-                    onChanged: (val) {
-                      HapticFeedback.selectionClick();
-                      setState(() => _agreed = val ?? false);
-                    },
+                    subtitle: _agreed
+                        ? Text(
+                            isTl ? '✓ Nakumpirma at naka-lock na ang pagsang-ayon' : '✓ Agreement confirmed & locked',
+                            style: const TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                              color: AppTheme.primaryGreen,
+                            ),
+                          )
+                        : null,
+                    // Disabled before scrolling to bottom, and locked/disabled once checked!
+                    onChanged: (!_hasScrolledToBottom || _agreed)
+                        ? null
+                        : (val) {
+                            HapticFeedback.selectionClick();
+                            if (val == true) {
+                              setState(() => _agreed = true);
+                            }
+                          },
                   ),
                 ),
               ),

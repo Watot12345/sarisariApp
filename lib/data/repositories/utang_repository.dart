@@ -1,11 +1,16 @@
 import 'package:sqflite/sqflite.dart';
 import '../../core/exceptions.dart';
+import '../../core/utils/currency_formatter.dart';
 import '../db/app_database.dart';
 import '../models/utang_entry.dart';
+import 'activity_log_repository.dart';
 
 class UtangRepository {
   final AppDatabase _appDb;
-  UtangRepository([AppDatabase? appDb]) : _appDb = appDb ?? AppDatabase.instance;
+  final ActivityLogRepository _activityRepo;
+  UtangRepository([AppDatabase? appDb])
+      : _appDb = appDb ?? AppDatabase.instance,
+        _activityRepo = ActivityLogRepository(appDb);
 
   Future<Database> get _db async => await _appDb.database;
 
@@ -63,13 +68,20 @@ class UtangRepository {
     final db = await _db;
     final now = DateTime.now().toUtc().toIso8601String();
 
-    return await db.insert('utang_entries', {
+    final id = await db.insert('utang_entries', {
       'customer_id': customerId,
       'type': 'payment',
       'amount_cents': amountCents,
       'note': note ?? 'Payment received',
       'created_at': now,
     });
+
+    await _activityRepo.logActivity(
+      actionType: 'credit_paid',
+      title: 'Credit Payment Received',
+      description: 'Customer #$customerId paid ${CurrencyFormatter.format(amountCents)} (${note ?? 'Payment received'})',
+    );
+    return id;
   }
 
   /// Records a manual utang charge (e.g. store credit outside POS).
@@ -86,7 +98,7 @@ class UtangRepository {
     final db = await _db;
     final now = DateTime.now().toUtc().toIso8601String();
 
-    return await db.insert('utang_entries', {
+    final id = await db.insert('utang_entries', {
       'customer_id': customerId,
       'type': 'charge',
       'amount_cents': amountCents,
@@ -94,6 +106,13 @@ class UtangRepository {
       'note': note ?? 'Manual charge',
       'created_at': now,
     });
+
+    await _activityRepo.logActivity(
+      actionType: 'credit_charged',
+      title: 'Credit Ledger Charge',
+      description: 'Customer #$customerId charged ${CurrencyFormatter.format(amountCents)}${dueDate != null ? ' • Due: $dueDate' : ''}',
+    );
+    return id;
   }
 
   /// Total store-wide outstanding utang across all active customers.

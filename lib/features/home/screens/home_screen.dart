@@ -9,9 +9,11 @@ import '../../../core/strings.dart';
 import '../../../shared/widgets/price_text.dart';
 import '../../../shared/widgets/stat_card.dart';
 import '../../../shared/widgets/stock_badge.dart';
+import '../../../shared/widgets/store_header_title.dart';
 import '../../gamification/gamification_provider.dart';
 import '../../gamification/screens/store_avatar_screen.dart';
 import '../../gamification/widgets/animated_store_avatar.dart';
+import '../../gamification/widgets/tindahan_quest_card.dart';
 import '../../navigation/navigation_provider.dart';
 import '../../notifications/widgets/notification_bell_button.dart';
 import '../../products/providers/product_provider.dart';
@@ -52,22 +54,9 @@ class HomeScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              _getGreeting(isTagalog: isTl),
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
-            ),
-            Text(
-              todayFormatted,
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w500,
-                color: theme.colorScheme.onSurface.withOpacity(0.6),
-              ),
-            ),
-          ],
+        title: StoreHeaderTitle(
+          sectionTitle: isTl ? 'Tahanan' : 'Home',
+          subtitle: '${_getGreeting(isTagalog: isTl)} • $todayFormatted',
         ),
         actions: [
           // Animated Avatar Emoticon button -> opens dedicated StoreAvatarScreen
@@ -91,18 +80,31 @@ class HomeScreen extends StatelessWidget {
           ),
         ],
       ),
-      body: ListView(
-        padding: const EdgeInsets.all(AppConstants.space16),
-        children: [
-          // 2x2 Metric Grid
-          GridView.count(
-            crossAxisCount: 2,
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            crossAxisSpacing: AppConstants.space12,
-            mainAxisSpacing: AppConstants.space12,
-            childAspectRatio: 1.45,
-            children: [
+      body: RefreshIndicator(
+        displacement: 120.0,
+        strokeWidth: 3.0,
+        onRefresh: () async {
+          await homeProv.loadDashboard();
+          await productProv.loadProducts();
+          await utangProv.loadCustomers();
+        },
+        child: ListView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.all(AppConstants.space16),
+          children: [
+            // Engaging Store Net Worth & Profit Streak Card (No RPG Levels)
+            const TindahanQuestCard(),
+            const SizedBox(height: AppConstants.space16),
+
+            // 2x2 Metric Grid
+            GridView.count(
+              crossAxisCount: 2,
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              crossAxisSpacing: AppConstants.space12,
+              mainAxisSpacing: AppConstants.space12,
+              childAspectRatio: 1.45,
+              children: [
               StatCard(
                 title: isTl ? 'Benta Ngayon' : AppStrings.todaySales,
                 value: homeProv.todaySalesCents,
@@ -399,7 +401,8 @@ class HomeScreen extends StatelessWidget {
                 },
               ),
             ),
-        ],
+          ],
+        ),
       ),
     );
   }

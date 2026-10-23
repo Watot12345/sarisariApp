@@ -4,10 +4,12 @@ import 'package:provider/provider.dart';
 import '../../../core/constants.dart';
 import '../../../core/strings.dart';
 import '../../../core/theme/app_theme.dart';
-import '../../../core/utils/currency_formatter.dart';
 import '../../../core/localization/language_provider.dart';
 import '../../../shared/widgets/price_text.dart';
 import '../../../shared/widgets/empty_state.dart';
+import '../../../shared/widgets/slide_action_tile.dart';
+import '../../../shared/widgets/store_header_title.dart';
+import '../../../data/models/customer.dart';
 import '../providers/utang_provider.dart';
 import '../widgets/add_edit_customer_sheet.dart';
 import '../widgets/customer_detail_sheet.dart';
@@ -32,6 +34,39 @@ class _UtangScreenState extends State<UtangScreen> {
 
   void _showPaymentBottomSheet(BuildContext context, dynamic customer) {
     RecordPaymentSheet.show(context, customer);
+  }
+
+  void _confirmDeleteCustomer(BuildContext context, Customer customer) {
+    final isTl = context.read<LanguageProvider?>()?.isTagalog ?? false;
+    showDialog(
+      context: context,
+      builder: (dialogCtx) => AlertDialog(
+        title: Text(isTl ? 'I-delete si ${customer.name}?' : 'Delete ${customer.name}?'),
+        content: Text(
+          isTl
+              ? 'Itatago ang suki sa listahan ngunit mananatili ang rekord ng nakaraang bayad at utang.'
+              : 'This customer will be archived from the active list while preserving historical credit records.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogCtx),
+            child: Text(isTl ? 'Kanselahin' : 'Cancel'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppTheme.dangerRed,
+              foregroundColor: Colors.white,
+            ),
+            onPressed: () async {
+              HapticFeedback.heavyImpact();
+              await context.read<UtangProvider>().deleteCustomer(customer.id);
+              if (dialogCtx.mounted) Navigator.pop(dialogCtx);
+            },
+            child: Text(isTl ? 'Oo, I-delete' : 'Yes, Delete'),
+          ),
+        ],
+      ),
+    );
   }
 
   Widget _buildRiskChip(String? level, bool isTl) {
@@ -84,9 +119,8 @@ class _UtangScreenState extends State<UtangScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(
-          isTl ? 'Talaan ng Utang' : AppStrings.utangTitle,
-          style: const TextStyle(fontWeight: FontWeight.bold),
+        title: StoreHeaderTitle(
+          sectionTitle: isTl ? 'Talaan ng Utang' : AppStrings.utangTitle,
         ),
       ),
       body: Column(
@@ -171,97 +205,120 @@ class _UtangScreenState extends State<UtangScreen> {
 
           const SizedBox(height: AppConstants.space12),
 
-          // Customer List
+          // Customer List with 4-inch (120px) Pull-to-Refresh and SlideActionTile
           Expanded(
-            child: customers.isEmpty
-                ? EmptyState(
-                    icon: Icons.people_outline,
-                    title: isTl ? 'Walang nahanap na suki' : 'No customers found',
-                    description: isTl
-                        ? 'Maglista ng mga regular na kapitbahay para masubaybayan ang utang.'
-                        : 'Add regular neighborhood customers to start tracking utang.',
-                  )
-                : ListView.separated(
-                    padding: const EdgeInsets.all(AppConstants.space16),
-                    itemCount: customers.length,
-                    separatorBuilder: (_, __) => const SizedBox(height: AppConstants.space8),
-                    itemBuilder: (context, index) {
-                      final customer = customers[index];
-                      return Card(
-                        clipBehavior: Clip.antiAlias,
-                        child: InkWell(
+            child: RefreshIndicator(
+              displacement: 120.0,
+              strokeWidth: 3.0,
+              onRefresh: () => utangProv.loadCustomers(),
+              child: customers.isEmpty
+                  ? EmptyState(
+                      icon: Icons.people_outline,
+                      title: isTl ? 'Walang nahanap na suki' : 'No customers found',
+                      description: isTl
+                          ? 'Maglista ng mga regular na kapitbahay para masubaybayan ang utang.'
+                          : 'Add regular neighborhood customers to start tracking utang.',
+                    )
+                  : ListView.separated(
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      padding: const EdgeInsets.all(AppConstants.space16),
+                      itemCount: customers.length,
+                      separatorBuilder: (_, __) => const SizedBox(height: AppConstants.space8),
+                      itemBuilder: (context, index) {
+                        final customer = customers[index];
+                        return SlideActionTile(
+                          key: ValueKey('customer_slide_${customer.id}'),
+                          editLabel: isTl ? 'I-edit' : 'Edit',
+                          deleteLabel: isTl ? 'I-delete' : 'Delete',
                           onTap: () => CustomerDetailSheet.show(context, customer),
-                          child: Padding(
-                            padding: const EdgeInsets.all(AppConstants.space16),
-                            child: Row(
-                              children: [
-                                CircleAvatar(
-                                  backgroundColor: theme.colorScheme.primary.withOpacity(0.12),
-                                  child: Text(
-                                    customer.name.substring(0, 1).toUpperCase(),
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      color: theme.colorScheme.primary,
+                          onEdit: () => AddEditCustomerSheet.show(context, customer: customer),
+                          onDelete: () => _confirmDeleteCustomer(context, customer),
+                          child: Card(
+                            clipBehavior: Clip.antiAlias,
+                            child: Padding(
+                              padding: const EdgeInsets.all(AppConstants.space16),
+                              child: Row(
+                                children: [
+                                  CircleAvatar(
+                                    backgroundColor: theme.colorScheme.primary.withOpacity(0.12),
+                                    child: Text(
+                                      customer.name.substring(0, 1).toUpperCase(),
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        color: theme.colorScheme.primary,
+                                      ),
                                     ),
                                   ),
-                                ),
-                                const SizedBox(width: AppConstants.space12),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        customer.displayName,
-                                        style: const TextStyle(
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.bold,
+                                  const SizedBox(width: AppConstants.space12),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          customer.displayName,
+                                          style: const TextStyle(
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.bold,
+                                          ),
                                         ),
+                                        const SizedBox(height: 4),
+                                        Row(
+                                          children: [
+                                            _buildRiskChip(customer.riskLevel, isTl),
+                                            if (customer.phone != null && customer.phone!.isNotEmpty) ...[
+                                              const SizedBox(width: 6),
+                                              Icon(
+                                                Icons.phone_iphone_rounded,
+                                                size: 12,
+                                                color: theme.colorScheme.onSurface.withOpacity(0.5),
+                                              ),
+                                            ],
+                                          ],
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  Column(
+                                    crossAxisAlignment: CrossAxisAlignment.end,
+                                    children: [
+                                      PriceText(
+                                        centavos: customer.balanceCents,
+                                        fontSize: 16,
+                                        color: customer.balanceCents > 0
+                                            ? AppTheme.dangerRed
+                                            : theme.colorScheme.onSurface,
                                       ),
                                       const SizedBox(height: 4),
-                                      _buildRiskChip(customer.riskLevel, isTl),
-                                    ],
-                                  ),
-                                ),
-                                Column(
-                                  crossAxisAlignment: CrossAxisAlignment.end,
-                                  children: [
-                                    PriceText(
-                                      centavos: customer.balanceCents,
-                                      fontSize: 16,
-                                      color: customer.balanceCents > 0
-                                          ? AppTheme.dangerRed
-                                          : theme.colorScheme.onSurface,
-                                    ),
-                                    const SizedBox(height: 4),
-                                    if (customer.balanceCents > 0)
-                                      SizedBox(
-                                        height: 30,
-                                        child: ElevatedButton(
-                                          style: ElevatedButton.styleFrom(
-                                            padding: const EdgeInsets.symmetric(horizontal: 14),
-                                            minimumSize: Size.zero,
-                                            backgroundColor: AppTheme.primaryGreen,
-                                            foregroundColor: Colors.white,
-                                          ),
-                                          onPressed: () {
-                                            HapticFeedback.lightImpact();
-                                            _showPaymentBottomSheet(context, customer);
-                                          },
-                                          child: Text(
-                                            isTl ? 'Bayad' : 'Pay',
-                                            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                                      if (customer.balanceCents > 0)
+                                        SizedBox(
+                                          height: 30,
+                                          child: ElevatedButton(
+                                            style: ElevatedButton.styleFrom(
+                                              padding: const EdgeInsets.symmetric(horizontal: 14),
+                                              minimumSize: Size.zero,
+                                              backgroundColor: AppTheme.primaryGreen,
+                                              foregroundColor: Colors.white,
+                                            ),
+                                            onPressed: () {
+                                              HapticFeedback.lightImpact();
+                                              _showPaymentBottomSheet(context, customer);
+                                            },
+                                            child: Text(
+                                              isTl ? 'Bayad' : 'Pay',
+                                              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                                            ),
                                           ),
                                         ),
-                                      ),
-                                  ],
-                                ),
-                              ],
+                                    ],
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
-                        ),
-                      );
-                    },
-                  ),
+                        );
+                      },
+                    ),
+            ),
           ),
         ],
       ),

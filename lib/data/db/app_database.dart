@@ -14,7 +14,7 @@ class AppDatabase {
   static final AppDatabase instance = AppDatabase._();
 
   static const String _dbName = 'tindahan.db';
-  static const int _dbVersion = 2;
+  static const int _dbVersion = 3;
 
   Database? _database;
 
@@ -51,6 +51,19 @@ class AppDatabase {
           // Wipe v1 dummy seed data for clean production release
           await DatabaseSeeder.resetAllStoreData(db);
         }
+        if (oldVersion < 3) {
+          // Ensure activity_logs table and index exist without wiping user data
+          await db.execute('''
+            CREATE TABLE IF NOT EXISTS activity_logs (
+              id          INTEGER PRIMARY KEY AUTOINCREMENT,
+              action_type TEXT NOT NULL,
+              title       TEXT NOT NULL,
+              description TEXT NOT NULL,
+              created_at  TEXT NOT NULL
+            );
+          ''');
+          await db.execute('CREATE INDEX IF NOT EXISTS idx_activity_logs_created_at ON activity_logs(created_at DESC);');
+        }
       },
       onOpen: (db) async {
         try {
@@ -58,6 +71,18 @@ class AppDatabase {
         } catch (_) {
           // Column already exists
         }
+        try {
+          await db.execute('''
+            CREATE TABLE IF NOT EXISTS activity_logs (
+              id          INTEGER PRIMARY KEY AUTOINCREMENT,
+              action_type TEXT NOT NULL,
+              title       TEXT NOT NULL,
+              description TEXT NOT NULL,
+              created_at  TEXT NOT NULL
+            );
+          ''');
+          await db.execute('CREATE INDEX IF NOT EXISTS idx_activity_logs_created_at ON activity_logs(created_at DESC);');
+        } catch (_) {}
       },
     );
   }

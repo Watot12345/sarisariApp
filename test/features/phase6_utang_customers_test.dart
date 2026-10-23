@@ -27,8 +27,6 @@ import 'package:tindahan/features/sell/providers/cart_provider.dart';
 import 'package:tindahan/features/utang/providers/utang_provider.dart';
 import 'package:tindahan/features/utang/screens/utang_screen.dart';
 import 'package:tindahan/features/utang/widgets/add_edit_customer_sheet.dart';
-import 'package:tindahan/features/utang/widgets/customer_detail_sheet.dart';
-import 'package:tindahan/features/utang/widgets/record_payment_sheet.dart';
 
 void main() {
   late Database db;

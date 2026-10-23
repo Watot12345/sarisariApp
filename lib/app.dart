@@ -29,6 +29,7 @@ import 'features/gamification/screens/store_avatar_screen.dart';
 import 'features/notifications/providers/notification_provider.dart';
 import 'features/onboarding/providers/onboarding_provider.dart';
 import 'features/onboarding/screens/policy_consent_screen.dart';
+import 'shared/widgets/sari_splash_screen.dart';
 
 /// Root Application Widget with Provider injection and Theme configuration.
 class TindahanApp extends StatelessWidget {
@@ -57,19 +58,16 @@ class TindahanApp extends StatelessWidget {
           return MaterialApp(
             title: AppConstants.appName,
             debugShowCheckedModeBanner: false,
-            theme: AppTheme.lightTheme,
-            darkTheme: AppTheme.darkTheme,
+            theme: AppTheme.getLightTheme(themeProv.containerColorPreset),
+            darkTheme: AppTheme.getDarkTheme(themeProv.containerColorPreset),
             themeMode: themeProv.themeMode,
             scrollBehavior: const MobileAppScrollBehavior(),
-            home: onboardingProv.isLoading
-                ? const Scaffold(
-                    body: Center(
-                      child: CircularProgressIndicator(),
-                    ),
-                  )
-                : onboardingProv.isPolicyAccepted
-                    ? const AppNavigationShell()
-                    : const PolicyConsentScreen(),
+            home: SariSplashGate(
+              isLoadingData: onboardingProv.isLoading,
+              child: onboardingProv.isPolicyAccepted
+                  ? const AppNavigationShell()
+                  : const PolicyConsentScreen(),
+            ),
             routes: {
               '/settings': (context) => const SettingsScreen(),
               '/policy': (context) => const PolicyConsentScreen(),
@@ -422,7 +420,7 @@ class _AppNavigationShellState extends State<AppNavigationShell> {
               NavigationDestination(
                 icon: const Icon(Icons.menu_book_outlined),
                 selectedIcon: const Icon(Icons.menu_book_rounded),
-                label: isTl ? 'Utang' : 'Credit',
+                label: isTl ? 'Utang' : 'Credit Ledger',
               ),
               NavigationDestination(
                 icon: const Icon(Icons.bar_chart_outlined),

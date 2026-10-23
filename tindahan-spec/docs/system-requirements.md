@@ -11,8 +11,15 @@
 ### 1.1 Project Overview
 **Tindahan** is a high-speed, offline-first mobile Point of Sale (POS), inventory management, and customer credit (*utang*) ledger specifically tailored for Philippine neighborhood retail micro-enterprises (*sari-sari stores*). It completely replaces the traditional paper notebook (*cuaderno / listahan*) with zero monthly fees, zero server costs, and no dependency on internet connectivity.
 
-### 1.2 Target User Persona
-- **User:** Non-technical sari-sari store owner or neighborhood helper (*tindero / tindera*).
+### 1.2 Target User Persona & Market Tiers
+- **Primary User:** Sari-sari store owner or store helper (*tindero / tindera*).
+- **Target Market Tiers:**
+  1. **Small Sari-Sari Store Owners (Core Focus):** Home-based neighborhood stores replacing paper *listahan* with a fast, 100% offline POS and credit ledger.
+  2. **Medium Sari-Sari Store Owners (Growth Focus):** High-volume neighborhood stores with store helpers needing barcode scanning, expiry alerts, activity logs, and printable restock receipts.
+  3. **High / Mini-Grocery Stores (Future Expansion):** Larger neighborhood groceries requiring Windows PC support (coming soon), multi-device sync, and automated customer notifications.
+- **Monetization & Subscription Strategy (Freemium $\rightarrow$ Pro):**
+  - **Free Tier:** Offline POS, basic inventory, and customer credit ledger for small stores starting out.
+  - **Pro Subscription Tier:** Unlockable via affordable monthly/annual plans (GCash/Maya activation or Google Play Billing) for medium-to-large stores—including Activity Logs, Custom Container Branding, Printable Restock Receipts, Automated Due-Date Notifications, and upcoming Cloud/PC Sync.
 - **Environment:** Bright outdoor sunlight, dim evening store lighting, loud street noise.
 - **Physical Context:** One-handed operation while simultaneously grabbing items, counting change, or attending to customers.
 - **Ergonomics:** Large touch targets ($\ge 48\times48\text{ dp}$), 2 to 3 taps to complete any core transaction, high visual contrast, and immediate haptic feedback.
@@ -411,4 +418,37 @@ flowchart TD
     V2_3 --> V2_4["Phase V2-4: GCash / Maya Cash-In, Cash-Out & E-Load Kaha Tracker"]
     V2_4 --> V2_5["Phase V2-5: Polite Paalala sa Utang Share Card & Bote Deposit Tracker"]
 ```
+
+---
+
+## 9. Version 1.01 (`v1.01`) Beta Tester Feedback & Release Requirements
+
+> Full interactive progress checklist is tracked in [`docs/v1.01-progress-fix.md`](../../docs/v1.01-progress-fix.md).
+
+### 9.1 Non-Functional Requirements (`v1.01` Updates)
+- **Manage Anytime, Anywhere:** Complete local persistence allowing owners to manage inventory, sales, and credit from anywhere.
+- **PC Application Support (Windows Compatible):** Listed as **Coming Soon (Note Only)** in documentation and app settings.
+- **Downloadable APK Size Reduction:** Current fat APK is `74 MB`; optimize via `--split-per-abi` and R8 resource/code shrinking (`< 30 MB` target).
+- **Android Safety & Google Play Protect Compliance:** Proper release signing configuration and permission audit to eliminate *"Google Play Protect: App not secured"* warnings.
+
+### 9.2 Functional & UX Requirements (`v1.01` Updates)
+- **Real-Time State Updates:** Instant synchronization across POS, Inventory, Credit Ledger, and Dashboard.
+- **Due-Date Customer Notifications (FB Messenger / SMS / Email):** Notify on collection due date using customer contact number; use zero-cost **Facebook Messenger / SMS intent sharing** while SMS gateway budget is not yet active.
+- **English Localization Fix:** Use **`Credit Ledger`** instead of *Utang* whenever English mode (`EN`) is active.
+- **4-Inch Pull-to-Refresh Gesture:** Pull down ~4 inches (`RefreshIndicator`) to reload screen data.
+- **Top Header Format (`Logo + Store Name | Navigation`):**
+  - Example: `Holy Spirit - Store | Inventory`, `Holy Spirit - Store | Sell`, `Holy Spirit - Store | Credit Ledger`.
+- **Unified Filter Dropdown:** Replace horizontal `"All"` slider chips with a dropdown containing *All*, *Low Stock*, *Expiry*, and categories.
+- **Long-Press + Slide-Left Item Actions:** Reveal **Edit** and **Delete** actions via long-press / slide-left gesture to maximize row space.
+- **Clickable Notifications Modal:** Tapping a notification opens a pop-up modal with full details.
+- **Privacy Policy Scroll-to-Agree Gate:** Keep the Privacy Policy checkbox disabled until the user scrolls to the bottom of the agreement text, and lock it after agreement.
+- **Widget, Barcode Camera & Push Notification Fixes:**
+  - Resolve `"Problem loading widget"` on Android Home Screen widget and fix custom local push notification firing.
+  - Fix `"Camera preview unavailable. Please use manual barcode entry below."` in [`BarcodeScannerSheet`](file:///home/your/sarisariApp/lib/shared/widgets/barcode_scanner_sheet.dart) by bundling the offline MLKit barcode model and adding a **"Snap Photo to Scan Barcode"** (`ImagePicker` + `analyzeImage`) camera fallback.
+  - In [`SellScreen`](file:///home/your/sarisariApp/lib/features/sell/screens/sell_screen.dart), scanning a product barcode automatically adds the item to the cart **and immediately opens the Cart / Complete Transaction checkout sheet** so the owner can finish the sale right away.
+- **Activity Logs:** Chronological audit log of store operations.
+- **Customized Container Colors:** Per-container/card color customization.
+- **Store Owner Profile & Enhanced Security:** Dedicated owner profile and hardened PIN security.
+- **Business Net Worth Streak (No RPG Levels):** Remove RPG levels (*"No level requirements kase mga seryoso gagamit nyan"*) and replace with an engaging **Streak every Net Worth milestone** + subtle UI animations.
+- **Printable Restock List (Receipt Style):** Receipt-formatted restock shopping checklist for market runs.
 

@@ -200,6 +200,23 @@ class UtangProvider extends ChangeNotifier {
     return true;
   }
 
+  /// Soft-deletes a customer from the active credit ledger while preserving historical entries.
+  Future<bool> deleteCustomer(int customerId) async {
+    _errorMessage = null;
+    try {
+      await _customerRepo.softDeleteCustomer(customerId);
+      await loadCustomers();
+      return true;
+    } catch (e) {
+      final idx = _customers.indexWhere((c) => c.id == customerId);
+      if (idx != -1) {
+        _customers.removeAt(idx);
+        notifyListeners();
+      }
+      return true;
+    }
+  }
+
   /// Plain-text statement: store name, customer, date, recent entries, balance.
   String buildStatement(int customerId, {String storeName = AppConstants.appName}) {
     final customer = customerById(customerId);
@@ -209,6 +226,24 @@ class UtangProvider extends ChangeNotifier {
       customer: customer,
       entries: ledgerFor(customerId),
     );
+  }
+
+  /// Builds a friendly Taglish/English payment reminder message for SMS / FB Messenger / Email.
+  String buildDueReminderText(
+    int customerId, {
+    String storeName = AppConstants.appName,
+    bool isTagalog = false,
+  }) {
+    final customer = customerById(customerId);
+    if (customer == null) return '';
+    final balPesos = (customer.balanceCents / 100.0).toStringAsFixed(2);
+    final dueNote = (customer.notes != null && customer.notes!.trim().isNotEmpty)
+        ? ' (${customer.notes!.trim()})'
+        : '';
+    if (isTagalog) {
+      return 'Magandang araw po ${customer.name}! Paalala lang po mula sa $storeName tungkol sa inyong utang na ₱$balPesos$dueNote. Maraming salamat po!';
+    }
+    return 'Good day ${customer.name}! Friendly reminder from $storeName regarding your credit balance of ₱$balPesos$dueNote. Thank you po!';
   }
 
   /// Add utang charge to a customer (used in sell checkout)

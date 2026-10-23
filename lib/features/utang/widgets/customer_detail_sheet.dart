@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../../core/constants.dart';
 import '../../../core/strings.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/theme/theme_provider.dart';
 import '../../../core/utils/currency_formatter.dart';
 import '../../../core/localization/language_provider.dart';
 import '../../../data/models/customer.dart';
@@ -87,7 +89,8 @@ class _CustomerDetailSheetState extends State<CustomerDetailSheet> {
 
   Future<void> _shareStatement(BuildContext context, Customer customer) async {
     final prov = context.read<UtangProvider>();
-    final statement = prov.buildStatement(customer.id);
+    final storeName = context.read<ThemeProvider?>()?.storeName ?? AppConstants.appName;
+    final statement = prov.buildStatement(customer.id, storeName: storeName);
 
     try {
       await Share.share(statement, subject: '${customer.name} - Utang Statement');
@@ -99,6 +102,92 @@ class _CustomerDetailSheetState extends State<CustomerDetailSheet> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(isTl ? 'Nakopya ang talaan sa clipboard!' : 'Statement copied to clipboard!'),
+            backgroundColor: AppTheme.primaryGreen,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _sendSmsReminder(BuildContext context, Customer customer, bool isTl) async {
+    final prov = context.read<UtangProvider>();
+    final storeName = context.read<ThemeProvider?>()?.storeName ?? AppConstants.appName;
+    final msg = prov.buildDueReminderText(customer.id, storeName: storeName, isTagalog: isTl);
+    final phone = customer.phone?.trim() ?? '';
+
+    final uri = Uri(
+      scheme: 'sms',
+      path: phone,
+      queryParameters: <String, String>{'body': msg},
+    );
+    try {
+      final launched = await launchUrl(uri);
+      if (!launched) throw Exception('Cannot launch SMS');
+    } catch (_) {
+      await Clipboard.setData(ClipboardData(text: msg));
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              isTl
+                  ? 'Nakopya ang SMS paalala sa clipboard!'
+                  : 'SMS reminder copied to clipboard!',
+            ),
+            backgroundColor: AppTheme.primaryGreen,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _sendMessengerReminder(BuildContext context, Customer customer, bool isTl) async {
+    final prov = context.read<UtangProvider>();
+    final storeName = context.read<ThemeProvider?>()?.storeName ?? AppConstants.appName;
+    final msg = prov.buildDueReminderText(customer.id, storeName: storeName, isTagalog: isTl);
+
+    await Clipboard.setData(ClipboardData(text: msg));
+    try {
+      await Share.share(msg, subject: '$storeName - Payment Reminder');
+    } catch (_) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              isTl
+                  ? 'Nakopya ang mensahe para sa FB Messenger!'
+                  : 'Reminder copied! Paste into FB Messenger.',
+            ),
+            backgroundColor: AppTheme.accentBlue,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _sendEmailReminder(BuildContext context, Customer customer, bool isTl) async {
+    final prov = context.read<UtangProvider>();
+    final storeName = context.read<ThemeProvider?>()?.storeName ?? AppConstants.appName;
+    final msg = prov.buildDueReminderText(customer.id, storeName: storeName, isTagalog: isTl);
+    final uri = Uri(
+      scheme: 'mailto',
+      queryParameters: <String, String>{
+        'subject': '$storeName — Credit Balance Reminder (${customer.name})',
+        'body': msg,
+      },
+    );
+    try {
+      final launched = await launchUrl(uri);
+      if (!launched) throw Exception('Cannot launch Email');
+    } catch (_) {
+      await Clipboard.setData(ClipboardData(text: msg));
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              isTl
+                  ? 'Nakopya ang email paalala sa clipboard!'
+                  : 'Email reminder copied to clipboard!',
+            ),
             backgroundColor: AppTheme.primaryGreen,
           ),
         );
@@ -313,6 +402,76 @@ class _CustomerDetailSheetState extends State<CustomerDetailSheet> {
                       ),
                     ],
                   ),
+
+                  if (customer.balanceCents > 0) ...[
+                    const SizedBox(height: 10),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: AppTheme.accentBlue.withOpacity(0.08),
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(color: AppTheme.accentBlue.withOpacity(0.2)),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            isTl
+                                ? 'Magpadala ng Paalala sa Bayad (Libreng SMS / Messenger / Email):'
+                                : 'Send Due-Date Payment Reminder (Free SMS / Messenger / Email):',
+                            style: const TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                              color: AppTheme.accentBlue,
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: OutlinedButton.icon(
+                                  key: const Key('customer_remind_messenger_btn'),
+                                  style: OutlinedButton.styleFrom(
+                                    padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 6),
+                                    foregroundColor: AppTheme.accentBlue,
+                                  ),
+                                  icon: const Icon(Icons.chat_bubble_outline_rounded, size: 15),
+                                  label: const Text('FB / Msg', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
+                                  onPressed: () => _sendMessengerReminder(context, customer, isTl),
+                                ),
+                              ),
+                              const SizedBox(width: 6),
+                              Expanded(
+                                child: OutlinedButton.icon(
+                                  key: const Key('customer_remind_sms_btn'),
+                                  style: OutlinedButton.styleFrom(
+                                    padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 6),
+                                    foregroundColor: AppTheme.primaryGreen,
+                                  ),
+                                  icon: const Icon(Icons.sms_outlined, size: 15),
+                                  label: const Text('SMS Text', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
+                                  onPressed: () => _sendSmsReminder(context, customer, isTl),
+                                ),
+                              ),
+                              const SizedBox(width: 6),
+                              Expanded(
+                                child: OutlinedButton.icon(
+                                  key: const Key('customer_remind_email_btn'),
+                                  style: OutlinedButton.styleFrom(
+                                    padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 6),
+                                    foregroundColor: AppTheme.accentAmber,
+                                  ),
+                                  icon: const Icon(Icons.email_outlined, size: 15),
+                                  label: const Text('Email', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
+                                  onPressed: () => _sendEmailReminder(context, customer, isTl),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
 
                   const SizedBox(height: 20),
 

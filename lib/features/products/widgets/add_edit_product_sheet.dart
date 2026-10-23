@@ -980,13 +980,13 @@ class _AddEditProductSheetState extends State<AddEditProductSheet> {
                   const SizedBox(height: 10),
                   OutlinedButton.icon(
                     onPressed: _isSaving ? null : () => _confirmDeleteFromSheet(context),
-                    icon: Icon(Icons.delete_outline_rounded, color: AppTheme.dangerRed),
+                    icon: const Icon(Icons.delete_outline_rounded, color: AppTheme.dangerRed),
                     label: Text(
                       isTl ? 'I-delete ang Produktong Ito' : 'Delete This Product',
                       style: const TextStyle(color: AppTheme.dangerRed, fontWeight: FontWeight.bold),
                     ),
                     style: OutlinedButton.styleFrom(
-                      side: BorderSide(color: AppTheme.dangerRed),
+                      side: const BorderSide(color: AppTheme.dangerRed),
                       padding: const EdgeInsets.symmetric(vertical: 12),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
@@ -1025,10 +1025,13 @@ class _AddEditProductSheetState extends State<AddEditProductSheet> {
             ),
             onPressed: () async {
               HapticFeedback.heavyImpact();
+              final navDialog = Navigator.of(dialogCtx);
+              final navSheet = Navigator.of(context);
+              final sm = ScaffoldMessenger.of(context);
               await context.read<ProductProvider>().deleteProduct(widget.product!.id);
-              Navigator.pop(dialogCtx);
-              Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
+              navDialog.pop();
+              navSheet.pop();
+              sm.showSnackBar(
                 SnackBar(
                   content: Text(
                     isTl

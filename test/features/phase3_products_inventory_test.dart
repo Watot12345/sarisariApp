@@ -368,7 +368,11 @@ void main() {
 
       final targetProd = productProv.filteredProducts.first;
 
-      // Tap delete icon on the first product row
+      // Long-press the first product row to slide left and reveal Edit & Delete buttons
+      await tester.longPress(find.text(targetProd.name).first);
+      await tester.pumpAndSettle();
+
+      // Tap delete icon revealed in the SlideActionTile drawer
       await tester.tap(find.byIcon(Icons.delete_outline_rounded).first);
       await tester.pumpAndSettle();
 

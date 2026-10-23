@@ -22,29 +22,105 @@ class NotificationsSheet extends StatelessWidget {
   }
 
   void _handleNotificationTap(BuildContext context, AppNotification notif) {
+    HapticFeedback.selectionClick();
     context.read<NotificationProvider>().markAsRead(notif.id);
-    Navigator.pop(context);
+    final isTl = context.read<LanguageProvider?>()?.isTagalog ?? false;
 
-    if (notif.payload != null) {
-      final nav = context.read<NavigationProvider?>();
-      if (nav != null) {
-        if (notif.payload == 'tindahan://products') {
-          nav.openProducts();
-        } else if (notif.payload == 'tindahan://utang') {
-          nav.openUtang();
-        } else if (notif.payload == 'tindahan://sell') {
-          nav.openSell();
-        } else if (notif.payload == 'tindahan://home') {
-          nav.openHome();
-        }
-      }
-    }
+    showDialog(
+      context: context,
+      builder: (dialogCtx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+        titlePadding: const EdgeInsets.fromLTRB(20, 20, 20, 8),
+        contentPadding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
+        title: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: notif.color.withOpacity(0.15),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(notif.icon, color: notif.color, size: 22),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                notif.title,
+                style: const TextStyle(
+                  fontSize: 15.5,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              notif.body,
+              style: const TextStyle(fontSize: 13.5, height: 1.45),
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Icon(
+                  Icons.schedule_rounded,
+                  size: 13,
+                  color: Theme.of(dialogCtx).colorScheme.onSurface.withOpacity(0.5),
+                ),
+                const SizedBox(width: 4),
+                Text(
+                  notif.formattedTime,
+                  style: TextStyle(
+                    fontSize: 11.5,
+                    color: Theme.of(dialogCtx).colorScheme.onSurface.withOpacity(0.55),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogCtx),
+            child: Text(isTl ? 'Isara' : 'Close'),
+          ),
+          if (notif.payload != null)
+            ElevatedButton.icon(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppTheme.primaryGreen,
+                foregroundColor: Colors.white,
+                minimumSize: const Size(0, 40),
+              ),
+              icon: const Icon(Icons.open_in_new_rounded, size: 16),
+              label: Text(isTl ? 'Buksan' : 'View Section'),
+              onPressed: () {
+                Navigator.pop(dialogCtx);
+                Navigator.pop(context);
+                final nav = context.read<NavigationProvider?>();
+                if (nav != null) {
+                  if (notif.payload == 'tindahan://products') {
+                    nav.openProducts();
+                  } else if (notif.payload == 'tindahan://utang') {
+                    nav.openUtang();
+                  } else if (notif.payload == 'tindahan://sell') {
+                    nav.openSell();
+                  } else if (notif.payload == 'tindahan://home') {
+                    nav.openHome();
+                  }
+                }
+              },
+            ),
+        ],
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
     final notifProv = context.watch<NotificationProvider>();
     final langProv = context.watch<LanguageProvider?>();
     final isTl = langProv?.isTagalog ?? false;

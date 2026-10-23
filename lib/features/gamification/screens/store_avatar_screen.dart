@@ -6,12 +6,13 @@ import '../../../core/theme/app_theme.dart';
 import '../../../core/utils/currency_formatter.dart';
 import '../../home/providers/home_provider.dart';
 import '../../products/providers/product_provider.dart';
+import '../../utang/providers/utang_provider.dart';
 import '../gamification_provider.dart';
 import '../widgets/animated_store_avatar.dart';
 
-/// Dedicated Store Avatar & Gamification Screen opened when tapping the avatar emoticon on HomeScreen.
-/// Keeps the main Home Dashboard focused on store management while giving the storekeeper a fun,
-/// motivating place to view their animated avatar, Store Level, Daily Sales Goal, and Badges.
+/// Dedicated Store Avatar & Net Worth Progress Screen opened when tapping the avatar emoticon on HomeScreen.
+/// Keeps the main Home Dashboard focused on store management while giving the storekeeper a motivating
+/// place to view their animated avatar, Store Net Worth, Active Profit Streak, Daily Sales Goal, and Badges.
 class StoreAvatarScreen extends StatefulWidget {
   const StoreAvatarScreen({super.key});
 
@@ -26,13 +27,13 @@ class _StoreAvatarScreenState extends State<StoreAvatarScreen> {
     if (isTl) {
       return [
         'Kumusta! Tuloy-tuloy lang sa paglista ng benta at kita!',
-        'Bawat benta at saktong paninda ay dagdag XP sa iyong tindahan!',
+        'Bawat benta at saktong paninda ay dagdag sa Net Worth ng iyong tindahan!',
         'Suki tip: Panatilihing kumpleto ang paninda para laging masaya ang mamimili!',
       ];
     }
     return [
       'Keep up the great work managing your store revenue and inventory!',
-      'Every recorded sale and healthy stock level earns XP for your store!',
+      'Every recorded sale and healthy stock level grows your store Net Worth!',
       'Store Tip: Tracking daily sales and utang keeps your profit growing!',
     ];
   }
@@ -46,6 +47,7 @@ class _StoreAvatarScreenState extends State<StoreAvatarScreen> {
     final gameProv = context.watch<GamificationProvider?>() ?? GamificationProvider();
     final homeProv = context.watch<HomeProvider>();
     final productProv = context.watch<ProductProvider>();
+    final utangProv = context.watch<UtangProvider?>();
 
     final todaySales = homeProv.todaySalesCents;
     final todayProfit = homeProv.todayProfitCents;
@@ -58,7 +60,6 @@ class _StoreAvatarScreenState extends State<StoreAvatarScreen> {
       lowStockCount: lowStockCount,
     );
     final level = gameProv.getLevelFromXp(xp);
-    final levelTitle = gameProv.getLevelTitle(level, isTagalog: isTl);
     final levelProgress = gameProv.getLevelProgress(xp);
     final goalProgress = gameProv.getDailyGoalProgress(todaySales);
     final goalPercent = (goalProgress * 100).round();
@@ -71,6 +72,15 @@ class _StoreAvatarScreenState extends State<StoreAvatarScreen> {
     final unlockedCount = badges.where((b) => b.isUnlocked).length;
     final quotes = _getQuotes(isTl, level);
     final currentQuote = quotes[_quoteIndex % quotes.length];
+
+    final inventoryValueCents = productProv.allProducts
+        .where((p) => p.isActive)
+        .fold<int>(0, (sum, p) => sum + (p.priceCents * p.stockQty));
+    final receivablesCents = utangProv?.totalReceivablesCents ?? 0;
+    final netWorthCents = (inventoryValueCents + homeProv.monthProfitCents - receivablesCents)
+        .clamp(0, 999999999);
+    final activeDays = homeProv.last7DaysSales.where((d) => d.salesCents > 0).length;
+    final streakDays = activeDays > 0 ? activeDays : (todaySales > 0 ? 1 : 0);
 
     return Scaffold(
       appBar: AppBar(
@@ -116,7 +126,7 @@ class _StoreAvatarScreenState extends State<StoreAvatarScreen> {
                 ),
                 const SizedBox(height: 12),
 
-                // Level & Title Pill
+                // Store Net Worth Pill
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
                   decoration: BoxDecoration(
@@ -124,7 +134,7 @@ class _StoreAvatarScreenState extends State<StoreAvatarScreen> {
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Text(
-                    'LVL $level • $levelTitle',
+                    'Net Worth • ${CurrencyFormatter.format(netWorthCents)}',
                     style: const TextStyle(
                       color: Colors.white,
                       fontSize: 13,
@@ -134,25 +144,28 @@ class _StoreAvatarScreenState extends State<StoreAvatarScreen> {
                 ),
                 const SizedBox(height: 8),
 
-                // XP Pill
+                // Active Profit Streak Pill
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Icon(Icons.stars_rounded, size: 18, color: AppTheme.accentAmber),
+                    const Icon(Icons.local_fire_department_rounded, size: 18, color: AppTheme.accentAmber),
                     const SizedBox(width: 4),
-                    Text(
-                      '$xp XP',
-                      style: const TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w900,
-                        color: AppTheme.accentAmber,
+                    Flexible(
+                      child: Text(
+                        isTl ? '$streakDays Araw na Profit Streak' : '$streakDays-Day Active Profit Streak',
+                        style: const TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w900,
+                          color: AppTheme.accentAmber,
+                        ),
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
                   ],
                 ),
                 const SizedBox(height: 12),
 
-                // Level XP Progress Bar
+                // Net Worth Milestone Progress Bar
                 ClipRRect(
                   borderRadius: BorderRadius.circular(8),
                   child: LinearProgressIndicator(

@@ -5,9 +5,11 @@ import '../../../core/theme/app_theme.dart';
 import '../../../core/utils/currency_formatter.dart';
 import '../../home/providers/home_provider.dart';
 import '../../products/providers/product_provider.dart';
+import '../../utang/providers/utang_provider.dart';
 import '../gamification_provider.dart';
 
-/// Gamification card showing Store Level, XP progress, Daily Benta Goal, and Badges.
+/// Store Net Worth, Active Profit Streak, Daily Benta Goal, and Business Milestones Card.
+/// Replaces RPG levels with professional business metrics for serious store owners.
 class TindahanQuestCard extends StatelessWidget {
   const TindahanQuestCard({super.key});
 
@@ -20,19 +22,25 @@ class TindahanQuestCard extends StatelessWidget {
     final gameProv = context.watch<GamificationProvider?>() ?? GamificationProvider();
     final homeProv = context.watch<HomeProvider>();
     final productProv = context.watch<ProductProvider>();
+    final utangProv = context.watch<UtangProvider?>();
 
     final todaySales = homeProv.todaySalesCents;
     final todayProfit = homeProv.todayProfitCents;
     final itemsSold = homeProv.itemsSoldToday;
     final lowStockCount = productProv.lowStockProducts.length;
 
-    final xp = gameProv.calculateTotalXp(
-      todaySalesCents: todaySales,
-      itemsSoldToday: itemsSold,
-      lowStockCount: lowStockCount,
-    );
-    final level = gameProv.getLevelFromXp(xp);
-    final levelTitle = gameProv.getLevelTitle(level, isTagalog: isTl);
+    // Net Worth = Active Inventory Retail Value + Month Net Profit - Unpaid Receivables
+    final inventoryValueCents = productProv.allProducts
+        .where((p) => p.isActive)
+        .fold<int>(0, (sum, p) => sum + (p.priceCents * p.stockQty));
+    final receivablesCents = utangProv?.totalReceivablesCents ?? 0;
+    final netWorthCents = (inventoryValueCents + homeProv.monthProfitCents - receivablesCents)
+        .clamp(0, 999999999);
+
+    // Active Profit Streak (days with sales in last 7 days, or 1+ when active today)
+    final activeDays = homeProv.last7DaysSales.where((d) => d.salesCents > 0).length;
+    final streakDays = activeDays > 0 ? activeDays : (todaySales > 0 ? 1 : 0);
+
     final goalProgress = gameProv.getDailyGoalProgress(todaySales);
     final goalPercent = (goalProgress * 100).round();
     final badges = gameProv.getBadges(
@@ -62,7 +70,7 @@ class TindahanQuestCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Top Row: Level Pill + XP Counter
+          // Top Row: Store Net Worth + Engaging Profit Streak Badge
           Row(
             children: [
               Container(
@@ -71,30 +79,37 @@ class TindahanQuestCard extends StatelessWidget {
                   color: AppTheme.primaryGreen,
                   borderRadius: BorderRadius.circular(20),
                 ),
-                child: Text(
-                  'LVL $level',
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 11,
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: 0.5,
-                  ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.account_balance_rounded, size: 12, color: Colors.white),
+                    const SizedBox(width: 4),
+                    Text(
+                      isTl ? 'NET WORTH' : 'NET WORTH',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 10,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                  ],
                 ),
               ),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  levelTitle,
+                  CurrencyFormatter.format(netWorthCents),
                   style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w800,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w900,
                     color: theme.colorScheme.onSurface,
                   ),
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
                 decoration: BoxDecoration(
                   color: AppTheme.accentAmber.withOpacity(0.18),
                   borderRadius: BorderRadius.circular(12),
@@ -102,10 +117,10 @@ class TindahanQuestCard extends StatelessWidget {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.stars_rounded, size: 14, color: AppTheme.accentAmber),
-                    const SizedBox(width: 4),
+                    const Icon(Icons.local_fire_department_rounded, size: 15, color: AppTheme.accentAmber),
+                    const SizedBox(width: 3),
                     Text(
-                      '$xp XP',
+                      isTl ? '$streakDays Araw Streak' : '$streakDays-Day Streak',
                       style: const TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.w900,

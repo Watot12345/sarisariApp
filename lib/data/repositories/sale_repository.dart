@@ -1,13 +1,18 @@
 import 'package:sqflite/sqflite.dart';
 import '../../core/exceptions.dart';
+import '../../core/utils/currency_formatter.dart';
 import '../db/app_database.dart';
 import '../models/cart_item.dart';
 import '../models/sale.dart';
 import '../models/sale_item.dart';
+import 'activity_log_repository.dart';
 
 class SaleRepository {
   final AppDatabase _appDb;
-  SaleRepository([AppDatabase? appDb]) : _appDb = appDb ?? AppDatabase.instance;
+  final ActivityLogRepository _activityRepo;
+  SaleRepository([AppDatabase? appDb])
+      : _appDb = appDb ?? AppDatabase.instance,
+        _activityRepo = ActivityLogRepository(appDb);
 
   Future<Database> get _db async => await _appDb.database;
 
@@ -109,6 +114,15 @@ class SaleRepository {
         });
       }
 
+      // 5. Log Activity
+      final itemCount = items.fold<int>(0, (s, i) => s + i.qty);
+      await _activityRepo.logActivity(
+        actionType: 'sale_completed',
+        title: 'Sale #$saleId (${paymentType == 'utang' ? 'Credit Ledger' : 'Cash'})',
+        description: '$itemCount item(s) sold for ${CurrencyFormatter.format(totalCents)}',
+        txn: txn,
+      );
+
       return Sale(
         id: saleId,
         soldAt: now,
@@ -182,6 +196,13 @@ class SaleRepository {
           'created_at': now,
         });
       }
+
+      await _activityRepo.logActivity(
+        actionType: 'sale_voided',
+        title: 'Voided Sale #$saleId',
+        description: 'Reason: $reason (${CurrencyFormatter.format(sale.totalCents)} restored)',
+        txn: txn,
+      );
     });
   }
 

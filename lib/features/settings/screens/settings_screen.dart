@@ -3,7 +3,6 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../../../core/constants.dart';
 import '../../../core/localization/language_provider.dart';
-import '../../../core/strings.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/theme/theme_provider.dart';
 import '../../../data/db/app_database.dart';
@@ -16,6 +15,7 @@ import '../../sell/providers/cart_provider.dart';
 import '../../utang/providers/utang_provider.dart';
 import '../../../core/services/update_service.dart';
 
+import '../widgets/activity_logs_sheet.dart';
 import '../widgets/home_widget_preview_card.dart';
 
 /// Settings screen for store profile, theme mode, language, gamification goals, PIN security, and offline backups.
@@ -35,7 +35,6 @@ class SettingsScreen extends StatefulWidget {
 
 class _SettingsScreenState extends State<SettingsScreen> {
   bool _pinLockEnabled = false;
-  String _storeName = 'SariMe Store';
   bool _checkingUpdate = false;
   final UpdateService _updateService = UpdateService();
 
@@ -139,16 +138,65 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   void _showEditStoreNameDialog(BuildContext context, LanguageProvider lang) {
-    final ctrl = TextEditingController(text: _storeName);
+    final themeProv = context.read<ThemeProvider>();
+    final storeCtrl = TextEditingController(text: themeProv.storeName);
+    final ownerCtrl = TextEditingController(text: themeProv.ownerName);
+    final phoneCtrl = TextEditingController(text: themeProv.ownerPhone);
+    final emailCtrl = TextEditingController(text: themeProv.ownerEmail);
+    final addressCtrl = TextEditingController(text: themeProv.storeAddress);
+
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text(lang.tr('Edit Store Name', 'Palitan ang Pangalan ng Tindahan')),
-        content: TextField(
-          controller: ctrl,
-          autofocus: true,
-          decoration: InputDecoration(
-            labelText: lang.tr('Store Name', 'Pangalan ng Tindahan'),
+        title: Text(lang.tr('Store & Owner Profile', 'Profile ng Tindahan at May-ari')),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: storeCtrl,
+                autofocus: true,
+                decoration: InputDecoration(
+                  labelText: lang.tr('Store Name (Header Title)', 'Pangalan ng Tindahan'),
+                  hintText: 'e.g. Holy Spirit - Store',
+                  prefixIcon: const Icon(Icons.storefront_rounded, size: 18),
+                ),
+              ),
+              const SizedBox(height: 10),
+              TextField(
+                controller: ownerCtrl,
+                decoration: InputDecoration(
+                  labelText: lang.tr('Owner Full Name', 'Pangalan ng May-ari'),
+                  prefixIcon: const Icon(Icons.person_outline_rounded, size: 18),
+                ),
+              ),
+              const SizedBox(height: 10),
+              TextField(
+                controller: phoneCtrl,
+                keyboardType: TextInputType.phone,
+                decoration: InputDecoration(
+                  labelText: lang.tr('Contact Number (SMS / GCash)', 'Numero ng Telepono'),
+                  prefixIcon: const Icon(Icons.phone_iphone_rounded, size: 18),
+                ),
+              ),
+              const SizedBox(height: 10),
+              TextField(
+                controller: emailCtrl,
+                keyboardType: TextInputType.emailAddress,
+                decoration: InputDecoration(
+                  labelText: lang.tr('Email Address', 'Email Address'),
+                  prefixIcon: const Icon(Icons.email_outlined, size: 18),
+                ),
+              ),
+              const SizedBox(height: 10),
+              TextField(
+                controller: addressCtrl,
+                decoration: InputDecoration(
+                  labelText: lang.tr('Store Address / Barangay', 'Adres o Barangay'),
+                  prefixIcon: const Icon(Icons.location_on_outlined, size: 18),
+                ),
+              ),
+            ],
           ),
         ),
         actions: [
@@ -157,14 +205,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
             child: Text(lang.tr('Cancel', 'Kanselahin')),
           ),
           ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppTheme.primaryGreen,
+              foregroundColor: Colors.white,
+            ),
             onPressed: () {
-              final nextName = ctrl.text.trim();
-              if (nextName.isNotEmpty) {
-                setState(() => _storeName = nextName);
-              }
+              themeProv.updateStoreProfile(
+                storeName: storeCtrl.text,
+                ownerName: ownerCtrl.text,
+                ownerPhone: phoneCtrl.text,
+                ownerEmail: emailCtrl.text,
+                storeAddress: addressCtrl.text,
+              );
               Navigator.pop(ctx);
             },
-            child: Text(lang.tr('Save', 'I-save')),
+            child: Text(lang.tr('Save Profile', 'I-save')),
           ),
         ],
       ),
@@ -535,17 +590,23 @@ class _SettingsScreenState extends State<SettingsScreen> {
       body: ListView(
         padding: const EdgeInsets.all(AppConstants.space16),
         children: [
-          // Store Info Card
+          // Store & Owner Profile Card
           Card(
             child: ListTile(
               leading: CircleAvatar(
                 backgroundColor: theme.colorScheme.primaryContainer,
                 child: Icon(Icons.storefront_rounded, color: theme.colorScheme.primary),
               ),
-              title: Text(_storeName, style: const TextStyle(fontWeight: FontWeight.bold)),
-              subtitle: Text(lang.tr('Neighborhood Sari-Sari Store', 'Tindahan sa Barangay')),
+              title: Text(themeProv.storeName, style: const TextStyle(fontWeight: FontWeight.bold)),
+              subtitle: Text(
+                '${themeProv.ownerName}${themeProv.ownerPhone.isNotEmpty ? " • ${themeProv.ownerPhone}" : ""} • ${themeProv.storeAddress}',
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
               trailing: IconButton(
+                key: const Key('settings_edit_profile_btn'),
                 icon: const Icon(Icons.edit_outlined),
+                tooltip: lang.tr('Edit Store & Owner Profile', 'I-edit ang Profile ng Tindahan'),
                 onPressed: () => _showEditStoreNameDialog(context, lang),
               ),
             ),
@@ -669,7 +730,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
           const SizedBox(height: AppConstants.space20),
 
-          // Push Notifications & Alerts
+          // Push Notifications, Container Color & Activity Logs
           Text(
             lang.tr('Notifications & Alerts', 'Mga Alerto at Notipikasyon'),
             style: TextStyle(
@@ -681,6 +742,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           const SizedBox(height: AppConstants.space8),
           Card(
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 ListTile(
                   key: const Key('settings_notifications_tile'),
@@ -697,6 +759,61 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     HapticFeedback.lightImpact();
                     NotificationsSheet.show(context);
                   },
+                ),
+                const Divider(height: 1),
+                ListTile(
+                  key: const Key('settings_activity_logs_tile'),
+                  leading: const Icon(Icons.history_edu_rounded, color: AppTheme.primaryGreen),
+                  title: Text(lang.tr('Activity Logs (Audit Trail)', 'Activity Logs (Talaan ng Aksyon)')),
+                  subtitle: Text(
+                    lang.tr(
+                      'Track every sale, stock change, utang charge, and payment',
+                      'Subaybayan ang bawat benta, restock, utang, at bayad',
+                    ),
+                  ),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () {
+                    HapticFeedback.lightImpact();
+                    ActivityLogsSheet.show(context);
+                  },
+                ),
+                const Divider(height: 1),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        lang.tr('Customized Container Color', 'Pasadyang Kulay ng bawat Container'),
+                        style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(height: 8),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: [
+                          ('default', lang.tr('Default', 'Default'), AppTheme.primaryGreen),
+                          ('emerald', 'Emerald', const Color(0xFF10B981)),
+                          ('blue', 'Ocean Blue', const Color(0xFF3B82F6)),
+                          ('purple', 'Ube Purple', const Color(0xFF8B5CF6)),
+                          ('amber', 'Mango Gold', const Color(0xFFF59E0B)),
+                          ('rose', 'Sampaguita Rose', const Color(0xFFF43F5E)),
+                        ].map((preset) {
+                          final (key, label, color) = preset;
+                          final isSelected = themeProv.containerColorPreset == key;
+                          return ChoiceChip(
+                            avatar: CircleAvatar(backgroundColor: color, radius: 7),
+                            label: Text(label, style: const TextStyle(fontSize: 12)),
+                            selected: isSelected,
+                            onSelected: (_) {
+                              HapticFeedback.selectionClick();
+                              themeProv.setContainerColorPreset(key);
+                            },
+                          );
+                        }).toList(),
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),
@@ -780,6 +897,69 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     HapticFeedback.mediumImpact();
                     _confirmResetAllData(context, lang);
                   },
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: AppConstants.space20),
+
+          // Subscription Tiers & Windows PC Companion Roadmap
+          Text(
+            lang.tr('Store Plans & Multi-Platform', 'Plano ng Tindahan at PC App'),
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.bold,
+              color: theme.colorScheme.onSurface.withOpacity(0.7),
+            ),
+          ),
+          const SizedBox(height: AppConstants.space8),
+          Card(
+            child: Column(
+              children: [
+                ListTile(
+                  leading: const Icon(Icons.workspace_premium_rounded, color: AppTheme.accentAmber),
+                  title: Text(
+                    lang.tr('SariMe Tier: Starter (Free Offline)', 'SariMe Tier: Starter (Libreng Offline)'),
+                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                  ),
+                  subtitle: Text(
+                    lang.tr(
+                      'Small & Medium Sari-Sari Store • Upgrade to SariMe Pro (₱99/mo via GCash/Maya) for Cloud Sync & Multi-Device',
+                      'Maliit at Katamtamang Tindahan • SariMe Pro (₱99/buwan sa GCash/Maya) para sa Cloud Sync',
+                    ),
+                    style: const TextStyle(fontSize: 11.5),
+                  ),
+                ),
+                const Divider(height: 1),
+                ListTile(
+                  leading: const Icon(Icons.desktop_windows_rounded, color: AppTheme.accentBlue),
+                  title: Text(
+                    lang.tr('PC Application Support (Windows Compatible)', 'PC Application Support (Windows Compatible)'),
+                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                  ),
+                  subtitle: Text(
+                    lang.tr(
+                      'Coming Soon — Manage your Sari-Sari store from your Windows PC or laptop',
+                      'Coming Soon — Pamahalaan ang iyong tindahan sa Windows PC o laptop',
+                    ),
+                    style: const TextStyle(fontSize: 11.5),
+                  ),
+                  trailing: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: AppTheme.accentBlue.withOpacity(0.14),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Text(
+                      'COMING SOON',
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w900,
+                        color: AppTheme.accentBlue,
+                      ),
+                    ),
+                  ),
                 ),
               ],
             ),

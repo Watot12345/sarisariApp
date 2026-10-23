@@ -161,6 +161,8 @@ class NotificationService {
     _initialized = true;
   }
 
+  bool _permissionsRequested = false;
+
   /// Request permissions for Android 13+ (POST_NOTIFICATIONS).
   Future<bool?> requestPermissions() async {
     if (isTestMode) return true;
@@ -168,6 +170,7 @@ class NotificationService {
       final android = _plugin
           .resolvePlatformSpecificImplementation<
               AndroidFlutterLocalNotificationsPlugin>();
+      _permissionsRequested = true;
       return await android?.requestNotificationsPermission();
     } catch (_) {
       return false;
@@ -193,17 +196,25 @@ class NotificationService {
 
     if (isTestMode) return;
 
+    if (!_initialized) {
+      await initialize();
+    }
+    if (!_permissionsRequested) {
+      await requestPermissions();
+    }
+
     final androidDetails = AndroidNotificationDetails(
       channelId,
       channelName,
       channelDescription: channelDesc,
-      importance: Importance.high,
+      importance: Importance.max,
       priority: Priority.high,
       icon: 'ic_notification',
       color: type == NotificationType.lowStock
           ? AppTheme.dangerRed
           : AppTheme.primaryGreen,
       ticker: title,
+      styleInformation: BigTextStyleInformation(body),
     );
 
     final notificationDetails = NotificationDetails(android: androidDetails);

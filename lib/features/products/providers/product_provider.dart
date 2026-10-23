@@ -11,6 +11,7 @@ class ProductProvider extends ChangeNotifier {
   String _searchQuery = '';
   String _selectedCategory = 'All';
   bool _filterLowStockOnly = false;
+  bool _filterExpiryOnly = false;
   bool _isLoading = false;
   String? _errorMessage;
 
@@ -31,10 +32,20 @@ class ProductProvider extends ChangeNotifier {
   String get searchQuery => _searchQuery;
   String get selectedCategory => _selectedCategory;
   bool get filterLowStockOnly => _filterLowStockOnly;
+  bool get filterExpiryOnly => _filterExpiryOnly;
 
   List<String> get categories {
     final set = {'All', ..._products.map((p) => p.categoryName)};
     return set.toList();
+  }
+
+  bool _isNearOrPastExpiry(Product p) {
+    final exp = p.expiryDate?.trim();
+    if (exp == null || exp.isEmpty) return false;
+    final parsed = DateTime.tryParse(exp);
+    if (parsed == null) return true;
+    final threshold = DateTime.now().add(const Duration(days: 30));
+    return !parsed.isAfter(threshold);
   }
 
   List<Product> get filteredProducts {
@@ -46,13 +57,25 @@ class ProductProvider extends ChangeNotifier {
       final matchesCategory =
           _selectedCategory == 'All' || p.categoryName == _selectedCategory;
       final matchesLowStock = !_filterLowStockOnly || p.isLowStock || p.isOutOfStock;
+      final matchesExpiry = !_filterExpiryOnly || _isNearOrPastExpiry(p);
 
-      return matchesQuery && matchesCategory && matchesLowStock;
+      return matchesQuery && matchesCategory && matchesLowStock && matchesExpiry;
     }).toList();
   }
 
   List<Product> get lowStockProducts {
     return _products.where((p) => p.isLowStock || p.isOutOfStock).toList();
+  }
+
+  List<Product> get expiryProducts {
+    return _products.where((p) => p.isActive && _isNearOrPastExpiry(p)).toList();
+  }
+
+  /// Current unified dropdown filter key ('All', 'LowStock', 'Expiry', or category name)
+  String get activeDropdownFilter {
+    if (_filterLowStockOnly) return 'LowStock';
+    if (_filterExpiryOnly) return 'Expiry';
+    return _selectedCategory;
   }
 
   /// Clears all in-memory products (used when resetting store data).
@@ -61,6 +84,7 @@ class ProductProvider extends ChangeNotifier {
     _searchQuery = '';
     _selectedCategory = 'All';
     _filterLowStockOnly = false;
+    _filterExpiryOnly = false;
     notifyListeners();
   }
 
@@ -94,6 +118,34 @@ class ProductProvider extends ChangeNotifier {
 
   void toggleLowStockFilter() {
     _filterLowStockOnly = !_filterLowStockOnly;
+    if (_filterLowStockOnly) _filterExpiryOnly = false;
+    notifyListeners();
+  }
+
+  void toggleExpiryFilter() {
+    _filterExpiryOnly = !_filterExpiryOnly;
+    if (_filterExpiryOnly) _filterLowStockOnly = false;
+    notifyListeners();
+  }
+
+  void applyDropdownFilter(String value) {
+    if (value == 'All') {
+      _selectedCategory = 'All';
+      _filterLowStockOnly = false;
+      _filterExpiryOnly = false;
+    } else if (value == 'LowStock') {
+      _selectedCategory = 'All';
+      _filterLowStockOnly = true;
+      _filterExpiryOnly = false;
+    } else if (value == 'Expiry') {
+      _selectedCategory = 'All';
+      _filterLowStockOnly = false;
+      _filterExpiryOnly = true;
+    } else {
+      _selectedCategory = value;
+      _filterLowStockOnly = false;
+      _filterExpiryOnly = false;
+    }
     notifyListeners();
   }
 

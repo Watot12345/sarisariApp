@@ -122,5 +122,17 @@ class M001Initial {
         value TEXT NOT NULL
       );
     ''');
+
+    // Activity logs audit trail (v1.01)
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS activity_logs (
+        id          INTEGER PRIMARY KEY AUTOINCREMENT,
+        action_type TEXT NOT NULL,
+        title       TEXT NOT NULL,
+        description TEXT NOT NULL,
+        created_at  TEXT NOT NULL
+      );
+    ''');
+    await db.execute('CREATE INDEX IF NOT EXISTS idx_activity_logs_created_at ON activity_logs(created_at DESC);');
   }
 }
